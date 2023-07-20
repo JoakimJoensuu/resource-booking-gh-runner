@@ -17,7 +17,8 @@
 python -m venv --clear .venv
 . .venv/bin/activate
 pip install --upgrade "pip>=21.3"
-pip install --editable ./booking_server[dev] --editable ./booking_client[dev]
+pip install --editable booking-server[dev] --editable booking-client[dev]
+pip install --editable booking-common[dev]
 ./server_reload.sh
 ```
 
