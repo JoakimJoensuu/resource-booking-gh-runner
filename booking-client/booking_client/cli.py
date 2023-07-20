@@ -30,6 +30,6 @@ def entry():
 
     asyncio.run(main())
     print("ASdD")
-
+    # TODO: When running book with --wait, prevent accidental SIGINT
     # TODO: To receive notifications https://stackoverflow.com/a/51610341/12820664
     # TODO: Argcomplete https://stackoverflow.com/a/15289025/12820664
