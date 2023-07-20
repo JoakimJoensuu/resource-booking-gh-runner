@@ -1,3 +1,3 @@
 #!/bin/sh
 
-find booking_server | entr -r python booking_server
+find booking_server | entr -r python booking_server/booking_server
