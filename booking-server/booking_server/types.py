@@ -92,7 +92,7 @@ def dumpable_booking(
     booking: Booking,
 ) -> DumpableBooking:
     return {
-        "info": booking["info"],
+        "info": booking["info"], # This is reference to an object, if dumpable functions are made asynchronous this can lead to race conditions 
         "used": booking["used"]["info"] if booking["used"] else None,
     }
 
