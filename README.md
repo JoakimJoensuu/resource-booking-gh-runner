@@ -5,7 +5,7 @@
 
  - [GitHub CLI](https://cli.github.com/)
  - [pip >= v21.3](https://pip.pypa.io/en/stable/installation/)
- - [Python >= Python 3.8.10](https://www.python.org/downloads/)
+ - [Python >= 3.8](https://www.python.org/downloads/)
 
 ## Python dev setup
 
