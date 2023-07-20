@@ -37,7 +37,7 @@ class Resource(TypedDict):
 class Booking(TypedDict):
     info: BookingInfo
     used: None | Resource
-
+    # Add optional booking time
 
 class DumpableResource(TypedDict):
     info: ResourceInfo
