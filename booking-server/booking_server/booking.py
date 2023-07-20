@@ -51,6 +51,7 @@ def finish_booking(booking: Booking, bookings: List[Booking]):
     freed_resource["used_by"] = None
     booking["info"]["status"] = BookingStatus.FINISHED
 
+    # TODO: Move to api.py
     asyncio.create_task(try_assigning_to_booking(freed_resource, bookings))
 
     return web.Response()
