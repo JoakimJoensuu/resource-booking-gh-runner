@@ -39,8 +39,9 @@ curl -o actions-runner-linux-x64-2.306.0.tar.gz --fail -L https://github.com/act
 echo "b0a090336f0d0a439dac7505475a1fb822f61bbb36420c7b3b3fe6b1bdc4dbaa  actions-runner-linux-x64-2.306.0.tar.gz" | shasum -a 256 -c
 
 start_runner() {
+
   RUNNER_NO=$1
-  echo "Runner number being set up $RUNNER_NO"
+  echo "Runner number $RUNNER_NO being set up"
 
   mkdir -p "$RUNNER_NO"
 
@@ -58,19 +59,36 @@ start_runner() {
 
   rm -f .runner
 
-  ./config.sh --url https://github.com/$OWNER/$REPO --token "$REGISTRATION_TOKEN" --replace --unattended --name "runner_$RUNNER_NO"
+  ./config.sh --url "https://github.com/$OWNER/$REPO" --token "$REGISTRATION_TOKEN" --replace --unattended --name "runner_$RUNNER_NO"
 
-  echo "Runner number being started $RUNNER_NO"
+  echo "Runner number $RUNNER_NO being started"
 
-  ./run.sh
+  CHILD_PID=""
+  ./run.sh &
+  CHILD_PID="$!"
+  echo "Run script pid $CHILD_PID"
+
+  wait
 }
+
+CHILD_PIDS=""
 
 RUNNER_NO=0
 while [ "$RUNNER_NO" -lt $RUNNERS_N ]; do
 
   start_runner $RUNNER_NO &
 
+  CHILD_PIDS="$CHILD_PIDS $!"
+
   RUNNER_NO=$((RUNNER_NO + 1))
 done
+
+echo "This pid $$"
+echo "All pids"
+for PID in $CHILD_PIDS; do
+  echo "$PID"
+done
+
+echo 'Kill everything with "pkill -TERM Runner.Listener"'
 
 wait
