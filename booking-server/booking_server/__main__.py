@@ -15,6 +15,7 @@ from booking_server.types import ServerData
 
 if __name__ == "__main__":
     app = web.Application()
+    # TODO: Move routes to api.py
     app.add_routes(
         [
             web.get("/booking/all", get_bookings),
