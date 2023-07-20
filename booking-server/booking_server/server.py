@@ -4,6 +4,13 @@ import json
 from aiohttp.web import Application
 from booking_server.types import ServerData, dumpable_server_data
 
+initial_server_data: ServerData = {
+    "booking_id_counter": 0,
+    "bookings": [],
+    "resources": [],
+    "id_to_booking": {},
+}
+
 
 async def get_server_data(application: Application):
     server_data: ServerData = application["server_data"]

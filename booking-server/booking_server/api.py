@@ -1,9 +1,11 @@
 import asyncio
 from datetime import datetime, timezone
 from http import HTTPStatus
+from typing import List
 
 from aiohttp import web
 from aiohttp.web_request import Request
+from aiohttp.web_routedef import RouteDef
 from booking_server.booking import BookingStatus, BookingUpdateAction
 from booking_server.broker import (
     try_assigning_new_resource,
@@ -61,6 +63,7 @@ async def new_resource(request: Request):
     server_data = await get_server_data(request.app)
 
     # TODO: Check for existing resources with same identifier
+
     server_data["resources"].append(resource)
 
     asyncio.create_task(
@@ -136,3 +139,17 @@ async def booking_update(request: Request):
     # TODO: Move web.Response construction here
     return action.updater(booking, bookings)
     # TODO: Move usage of function for assigning resource to othee booking here
+
+
+routes: List[RouteDef] = [
+    web.get("/booking/all", get_bookings),
+    web.get("/bookings", get_bookings),
+    web.post("/booking", new_booking),
+    web.post("/booking/{booking_id}/{action}", booking_update),
+    web.get("/booking/before/{booking_id}", unimplemented),
+    web.get("/booking/{booking_id}", get_booking),
+    web.post("/resource", new_resource),
+    web.delete("/resource", unimplemented),
+    web.get("/resource/all", get_resources),
+    web.get("/resources", get_resources),
+]
