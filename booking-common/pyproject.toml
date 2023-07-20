@@ -1,0 +1,9 @@
+[project]
+name = "Booking-common"
+version = "0.1.0"
+requires-python = ">=3.8"
+
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["black", "isort", "pylint", "mypy"]
