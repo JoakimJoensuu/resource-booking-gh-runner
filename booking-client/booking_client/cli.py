@@ -7,7 +7,9 @@ from booking_client.commands import main
 # TODO: client book machine_type_1 --workflow_id 345634
 # TODO: client book machine_type_1 machine_type_1_identifier_123265324
 # TODO: client cancel 123456
+# TODO: client wait <booking_id>
 
+# This command line tool shall go into interactive mode when `book --wait` or `wait` command is ran
 
 def entry():
     # create the top-level parser
