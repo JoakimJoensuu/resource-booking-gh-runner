@@ -5,12 +5,18 @@ on:
   workflow_dispatch:
 
 jobs:
+  debug:
+    runs-on: [self-hosted]
+    steps:
+      - run: pwd
+
   wait:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted]
     steps:
       - run: exit 1
 
   work:
-    runs-on: ubuntu-latest
+    needs: wait
+    runs-on: [self-hosted]
     steps:
       - run: echo "Working"
