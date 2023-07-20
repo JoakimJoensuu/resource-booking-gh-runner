@@ -9,6 +9,7 @@ async def try_assigning_to_booking(
 ):
     # TODO: What if resource is deleted before this runs?
 
+    # TODO: Move searching logic to booking.py
     for booking in bookings:
         requested = booking["info"]["requested"]
         if booking["info"]["status"] != BookingStatus.WAITING:
@@ -38,6 +39,7 @@ async def try_assigning_new_resource(
 
     requested = booking["info"]["requested"]
 
+    # TODO: Move searching logic to resource.py
     for resource in resources:
         if resource["info"]["type"] != requested["type"]:
             continue
