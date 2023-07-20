@@ -140,7 +140,7 @@ async def booking_update(request: Request):
     return action.updater(booking, bookings)
     # TODO: Move usage of function for assigning resource to othee booking here
 
-
+# TODO: Add /booking/extend
 routes: List[RouteDef] = [
     web.get("/booking/all", get_bookings),
     web.get("/bookings", get_bookings),
