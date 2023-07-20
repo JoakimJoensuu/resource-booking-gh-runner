@@ -19,7 +19,7 @@ class BookingRequest(TypedDict):
 class ResourceInfo(TypedDict):
     type: str
     identifier: str
-
+    # TODO: Allow adding arbitrary commands to be ran when resource is reserved or freed
 
 class BookingInfo(TypedDict):
     name: str
