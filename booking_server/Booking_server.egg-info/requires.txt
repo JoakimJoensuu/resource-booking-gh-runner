@@ -1,0 +1,4 @@
+aiohttp<4,>=3.8.4
+
+[dev]
+black
