@@ -1,4 +1,4 @@
-# gh-runner-hw-booking
+# resource-booking
 
 
 ## Prerequisities
