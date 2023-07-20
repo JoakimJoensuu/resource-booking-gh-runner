@@ -38,6 +38,7 @@ class Booking(TypedDict):
     info: BookingInfo
     used: None | Resource
     # Add optional booking time
+    # Add priviledged client compared to workflow
 
 class DumpableResource(TypedDict):
     info: ResourceInfo
