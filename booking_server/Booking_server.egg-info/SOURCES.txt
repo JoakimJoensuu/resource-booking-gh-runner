@@ -1,7 +1,0 @@
-pyproject.toml
-server.py
-Booking_server.egg-info/PKG-INFO
-Booking_server.egg-info/SOURCES.txt
-Booking_server.egg-info/dependency_links.txt
-Booking_server.egg-info/requires.txt
-Booking_server.egg-info/top_level.txt
