@@ -133,4 +133,6 @@ async def booking_update(request: Request):
     bookings = server_data["bookings"]
 
     action = BookingUpdateAction[requested_action.upper()]
+    # TODO: Move web.Response construction here
     return action.updater(booking, bookings)
+    # TODO: Move usage of function for assigning resource to othee booking here
