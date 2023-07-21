@@ -1,7 +1,7 @@
 from typing import List
 
-from booking_server.booking import BookingStatus
-from booking_server.types import Booking, Resource
+from booking_server.booking import Booking, BookingStatus
+from booking_server.resource import Resource
 
 
 async def try_assigning_to_booking(

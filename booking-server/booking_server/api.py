@@ -6,18 +6,18 @@ from typing import List
 from aiohttp import web
 from aiohttp.web_request import Request
 from aiohttp.web_routedef import RouteDef
-from booking_server.booking import BookingStatus
+from booking_server.booking import (
+    Booking,
+    BookingStatus,
+    dumpable_booking,
+    validate_booking_request,
+)
 from booking_server.broker import (
     try_assigning_new_resource,
     try_assigning_to_booking,
 )
+from booking_server.resource import validate_resource
 from booking_server.server import get_server_data
-from booking_server.types import (
-    Booking,
-    dumpable_booking,
-    validate_booking_request,
-    validate_resource,
-)
 
 
 async def new_booking(request: Request):
@@ -47,7 +47,7 @@ async def new_booking(request: Request):
         try_assigning_new_resource(booking, server_data["resources"])
     )
 
-    return web.json_response(dumpable_booking(booking))
+    return web.json_response(await dumpable_booking(booking))
 
 
 async def unimplemented(_: Request):
@@ -185,6 +185,7 @@ async def booking_cancel(request: Request):
     booking["info"]["status"] = BookingStatus.CANCELLED
 
     return web.Response()
+
 
 # TODO: Add /booking/extend
 routes: List[RouteDef] = [
