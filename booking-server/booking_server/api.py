@@ -18,6 +18,7 @@ from booking_server.broker import (
 )
 from booking_server.resource import validate_resource
 from booking_server.server import get_server_data
+from copy import deepcopy
 
 
 async def new_booking(request: Request):
@@ -47,7 +48,7 @@ async def new_booking(request: Request):
         try_assigning_new_resource(booking, server_data["resources"])
     )
 
-    return web.json_response(await dumpable_booking(booking))
+    return web.json_response(await dumpable_booking(deepcopy(booking)))
 
 
 async def unimplemented(_: Request):

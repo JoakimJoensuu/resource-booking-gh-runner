@@ -3,7 +3,6 @@ import json
 from copy import deepcopy
 from typing import Dict, List, TypedDict
 
-import aioconsole
 from aioconsole import aprint
 from aiohttp.web import Application
 from booking_server.booking import (
