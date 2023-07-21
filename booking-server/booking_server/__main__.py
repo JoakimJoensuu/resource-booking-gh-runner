@@ -10,8 +10,6 @@ from booking_server.server import (
 
 loop = asyncio.get_event_loop()
 
-print(type(loop))
-
 initial_server_data: ServerData = {
     "booking_id_counter": 0,
     "bookings": [],

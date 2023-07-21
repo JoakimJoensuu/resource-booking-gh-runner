@@ -3,7 +3,7 @@ import json
 from asyncio.events import AbstractEventLoop
 from copy import deepcopy
 from datetime import datetime, timezone
-from typing import Any, Awaitable, Coroutine, Dict, List, NoReturn, TypedDict
+from typing import Any, Coroutine, Dict, List, NoReturn, TypedDict
 
 from aioconsole import aprint
 from aiohttp import web
