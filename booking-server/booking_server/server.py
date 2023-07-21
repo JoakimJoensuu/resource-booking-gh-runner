@@ -1,12 +1,15 @@
 import asyncio
 import json
 from copy import deepcopy
+from datetime import datetime, timezone
 from typing import Dict, List, TypedDict
 
 from aioconsole import aprint
 from aiohttp.web import Application
 from booking_server.booking import (
     Booking,
+    BookingRequest,
+    BookingStatus,
     DumpableBooking,
     dumpable_booking,
     dumpable_bookings,
@@ -49,15 +52,40 @@ async def dumpable_server_data(
     }
 
 
-async def get_server_data(application: Application):
-    server_data: ServerData = application["server_data"]
-    return server_data
+async def add_new_booking(
+    booking_request: BookingRequest, server_data: ServerData
+):
+    booking_id = server_data["booking_id_counter"]
+    server_data["booking_id_counter"] += 1
+
+    booking: Booking = {
+        "info": {
+            "id": booking_id,
+            "name": booking_request["name"],
+            "requested": booking_request["resource"],
+            "booking_time": datetime.now(timezone.utc).isoformat(
+                timespec="seconds"
+            ),
+            "status": BookingStatus.WAITING,
+        },
+        "used": None,
+    }
+
+    server_data["bookings"].append(booking)
+    server_data["id_to_booking"][booking_id] = booking
+
+    return booking
+
+
+async def get_server_data(application: Application) -> ServerData:
+    return application["server_data"]
 
 
 async def periodic_cleanup(server_data: ServerData):
     # TODO: Implement
     # TODO: Could be also ran from endpoint handlers when lists get too big
     while True:
+        await asyncio.sleep(1)
         await aprint(
             "========================================================"
         )
@@ -67,5 +95,3 @@ async def periodic_cleanup(server_data: ServerData):
 
         dumpable = await dumpable_server_data(deepcopy(server_data))
         await aprint(json.dumps(dumpable, indent=2))
-
-        await asyncio.sleep(1)

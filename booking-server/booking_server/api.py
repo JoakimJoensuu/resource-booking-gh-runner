@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone
+from copy import deepcopy
 from http import HTTPStatus
 from typing import List
 
@@ -7,7 +7,6 @@ from aiohttp import web
 from aiohttp.web_request import Request
 from aiohttp.web_routedef import RouteDef
 from booking_server.booking import (
-    Booking,
     BookingStatus,
     dumpable_booking,
     validate_booking_request,
@@ -17,32 +16,14 @@ from booking_server.broker import (
     try_assigning_to_booking,
 )
 from booking_server.resource import validate_resource
-from booking_server.server import get_server_data
-from copy import deepcopy
+from booking_server.server import add_new_booking, get_server_data
 
 
-async def new_booking(request: Request):
+async def post_booking(request: Request):
     server_data = await get_server_data(request.app)
-    booking_id = server_data["booking_id_counter"]
-    server_data["booking_id_counter"] += 1
-
     booking_request = await validate_booking_request(await request.json())
 
-    booking: Booking = {
-        "info": {
-            "id": booking_id,
-            "name": booking_request["name"],
-            "requested": booking_request["resource"],
-            "booking_time": datetime.now(timezone.utc).isoformat(
-                timespec="seconds"
-            ),
-            "status": BookingStatus.WAITING,
-        },
-        "used": None,
-    }
-
-    server_data["bookings"].append(booking)
-    server_data["id_to_booking"][booking_id] = booking
+    booking = await add_new_booking(booking_request, server_data)
 
     asyncio.create_task(
         try_assigning_new_resource(booking, server_data["resources"])
@@ -58,7 +39,7 @@ async def unimplemented(_: Request):
     )
 
 
-async def new_resource(request: Request):
+async def post_resource(request: Request):
     resource = await validate_resource(await request.json())
 
     server_data = await get_server_data(request.app)
@@ -74,11 +55,11 @@ async def new_resource(request: Request):
     return web.Response()
 
 
-async def get_resources(request: Request):
+async def get_resource_all(request: Request):
     return web.json_response((await get_server_data(request.app))["resources"])
 
 
-async def get_booking(request: Request):
+async def get_booking_id(request: Request):
     booking_id = int(request.match_info["booking_id"])
     server_data = await get_server_data(request.app)
 
@@ -86,11 +67,11 @@ async def get_booking(request: Request):
     return web.json_response(server_data["id_to_booking"][booking_id])
 
 
-async def get_bookings(request: Request):
+async def get_booking_all(request: Request):
     return web.json_response((await get_server_data(request.app))["bookings"])
 
 
-async def booking_finish(request: Request):
+async def post_booking_id_finish(request: Request):
     booking_id = int(request.match_info["booking_id"])
     server_data = await get_server_data(request.app)
 
@@ -143,7 +124,7 @@ async def booking_finish(request: Request):
     return web.Response()
 
 
-async def booking_cancel(request: Request):
+async def post_booking_id_cancel(request: Request):
     booking_id = int(request.match_info["booking_id"])
     server_data = await get_server_data(request.app)
 
@@ -190,15 +171,15 @@ async def booking_cancel(request: Request):
 
 # TODO: Add /booking/extend
 routes: List[RouteDef] = [
-    web.get("/booking/all", get_bookings),
-    web.get("/bookings", get_bookings),
-    web.post("/booking", new_booking),
-    web.post("/booking/{booking_id}/finish", booking_finish),
-    web.post("/booking/{booking_id}/cancel", booking_cancel),
+    web.get("/booking/all", get_booking_all),
+    web.get("/bookings", get_booking_all),
+    web.post("/booking", post_booking),
+    web.post("/booking/{booking_id}/finish", post_booking_id_finish),
+    web.post("/booking/{booking_id}/cancel", post_booking_id_cancel),
     web.get("/booking/before/{booking_id}", unimplemented),
-    web.get("/booking/{booking_id}", get_booking),
-    web.post("/resource", new_resource),
+    web.get("/booking/{booking_id}", get_booking_id),
+    web.post("/resource", post_resource),
     web.delete("/resource", unimplemented),
-    web.get("/resource/all", get_resources),
-    web.get("/resources", get_resources),
+    web.get("/resource/all", get_resource_all),
+    web.get("/resources", get_resource_all),
 ]
