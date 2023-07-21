@@ -1,22 +1,24 @@
 import asyncio
 
-from aiohttp import web
 from booking_server.api import routes
-from booking_server.server import ServerData, periodic_cleanup
+from booking_server.server import (
+    ServerData,
+    periodic_cleanup,
+    start_cleaner,
+    start_server,
+)
 
-if __name__ == "__main__":
-    initial_server_data: ServerData = {
-        "booking_id_counter": 0,
-        "bookings": [],
-        "resources": [],
-        "id_to_booking": {},
-    }
+loop = asyncio.get_event_loop()
 
-    app = web.Application()
-    app.add_routes(routes)
-    app["server_data"] = initial_server_data
+print(type(loop))
 
-    loop = asyncio.get_event_loop()
-    loop.create_task(periodic_cleanup(initial_server_data))
+initial_server_data: ServerData = {
+    "booking_id_counter": 0,
+    "bookings": [],
+    "resources": [],
+    "id_to_booking": {},
+}
 
-    web.run_app(app, loop=loop)
+start_cleaner(loop, periodic_cleanup(initial_server_data))
+
+start_server(routes, initial_server_data, loop)

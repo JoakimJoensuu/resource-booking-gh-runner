@@ -1,11 +1,14 @@
 import asyncio
 import json
+from asyncio.events import AbstractEventLoop
 from copy import deepcopy
 from datetime import datetime, timezone
-from typing import Dict, List, TypedDict
+from typing import Any, Awaitable, Coroutine, Dict, List, NoReturn, TypedDict
 
 from aioconsole import aprint
+from aiohttp import web
 from aiohttp.web import Application
+from aiohttp.web_routedef import RouteDef
 from booking_server.booking import (
     Booking,
     BookingRequest,
@@ -95,3 +98,21 @@ async def periodic_cleanup(server_data: ServerData):
 
         dumpable = await dumpable_server_data(deepcopy(server_data))
         await aprint(json.dumps(dumpable, indent=2))
+
+
+def start_cleaner(
+    loop: AbstractEventLoop,
+    cleaning_routine: Coroutine[Any, Any, NoReturn],
+):
+    loop.create_task(cleaning_routine)
+
+
+def start_server(
+    routes: List[RouteDef],
+    initial_server_data: ServerData,
+    loop: AbstractEventLoop,
+):
+    app = web.Application()
+    app.add_routes(routes)
+    app["server_data"] = initial_server_data
+    web.run_app(app, loop=loop)
