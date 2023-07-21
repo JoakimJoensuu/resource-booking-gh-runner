@@ -26,6 +26,7 @@ class Booking(TypedDict):
     used: None | Resource
     # Add optional booking time
     # Add priviledged client compared to workflow
+    # Add callback address to trigger workflows later
 
 
 class DumpableBooking(TypedDict):
