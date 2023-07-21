@@ -44,8 +44,7 @@ async def post_resource(request: Request):
 
     server_data = await get_server_data(request.app)
 
-    # TODO: Check for existing resources with same identifier use HTTP 409 Conflict
-
+    # TODO: Check for existing resources with same identifier use HTTP 409 Conflict even when they have different types
     server_data["resources"].append(resource)
 
     asyncio.create_task(
