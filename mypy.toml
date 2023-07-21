@@ -1,0 +1,2 @@
+[tool.mypy]
+#warn_incomplete_stub = "False"
