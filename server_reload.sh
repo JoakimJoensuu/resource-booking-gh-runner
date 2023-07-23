@@ -1,3 +1,3 @@
 #!/bin/sh
 
-find booking-server booking-common | entr -r python booking-server/booking_server
+find . -type f -name "*.py" ! -path "*/.venv/*" | entr -rs "echo ''; echo ===============================================; echo ''; python booking-server/booking_server"
