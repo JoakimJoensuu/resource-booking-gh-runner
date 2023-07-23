@@ -66,9 +66,14 @@ async def post_booking(new_booking: NewBooking, request: AppRequest):
     status_code=HTTPStatus.OK,
 )
 async def get_booking_by_id(booking_id: int, request: AppRequest):
-    booking = request.app.server_state.ids_to_bookings[booking_id]
+    try:
+        booking = request.app.server_state.ids_to_bookings[booking_id]
+    except KeyError:
+        return Response(
+            f"Booking id {booking_id} doesn't exists.",
+            status_code=HTTPStatus.NOT_FOUND,
+        )
 
-    # TODO: Proper response for non existing booking
     return JSONResponse(
         content=jsonable_encoder(await dumpable_booking(booking))
     )
