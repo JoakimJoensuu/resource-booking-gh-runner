@@ -1,54 +1,52 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List, TypedDict
+from typing import TYPE_CHECKING
+
+from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
     from booking_server.booking import Booking, BookingInfo
+    from booking_server.server import ServerState
 
 
-class RequestedResource(TypedDict):
-    type: str
-    identifier: None | str
-
-
-class ResourceInfo(TypedDict):
+class ResourceInfo(BaseModel):
     type: str
     identifier: str
     # TODO: Allow adding arbitrary commands to be ran when resource is reserved or freed
 
 
-class Resource(TypedDict):
+class Resource(BaseModel):
     info: ResourceInfo
-    used_by: None | Booking
+    used_by: None | Booking = None
 
 
-class DumpableResource(TypedDict):
+class NewResource(BaseModel):
+    type: str = Field(examples=["big_machine"])
+    identifier: str = Field(examples=["floor_3"])
+
+
+class DumpableResource(BaseModel):
     info: ResourceInfo
     used_by: BookingInfo | None
 
 
-async def validate_resource(resource: Dict) -> Resource:
-    # TODO: Proper error reporting mechanism
-    # TODO: Generic TypedDict validation function
-    return {
-        "info": {
-            "identifier": resource["identifier"],
-            "type": resource["type"],
-        },
-        "used_by": None,
-    }
-
-
-async def dumpable_resource(resource: Resource) -> DumpableResource:
-    return {
-        "info": resource["info"],
-        "used_by": (
-            resource["used_by"]["info"] if resource["used_by"] else None
-        ),
-    }
+async def dumpable_resource(resource: Resource):
+    used_by = resource.used_by.info if resource.used_by else None
+    return DumpableResource(info=resource.info, used_by=used_by)
 
 
 async def dumpable_resources(
-    resources: List[Resource],
-) -> List[DumpableResource]:
+    resources: list[Resource],
+):
     return [await dumpable_resource(resource) for resource in resources]
+
+
+async def add_new_resource(
+    new_resource: NewResource,
+    server_state: ServerState,
+):
+    # TODO: Check for existing resources with same identifier use HTTP 409 Conflict
+    # even when they have different types
+    resource = Resource(info=ResourceInfo(**new_resource.model_dump()))
+    server_state.resources.append(resource)
+    return resource

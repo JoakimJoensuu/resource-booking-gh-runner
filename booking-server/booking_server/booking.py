@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Dict, List, TypedDict
+from typing import TYPE_CHECKING
 
-from booking_server.resource import RequestedResource, Resource, ResourceInfo
+from booking_server.resource import DumpableResource, Resource, ResourceInfo
+from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from booking_server.server import ServerState
 
 
 class BookingStatus(str, Enum):
@@ -13,54 +18,78 @@ class BookingStatus(str, Enum):
     ON = "ON"
 
 
-class BookingInfo(TypedDict):
+class RequestedResource(BaseModel):
+    type: str = Field(examples=["big_machine"])
+    identifier: None | str = Field(examples=["floor_3"], default=None)
+
+
+class NewBooking(BaseModel):
+    name: str = Field(examples=["Some One"])
+    requested: RequestedResource
+
+
+class BookingInfo(BaseModel):
     name: str
     id: int
     requested: RequestedResource
-    booking_time: str
+    booking_time: datetime
     status: BookingStatus
 
 
-class Booking(TypedDict):
+class Booking(BaseModel):
     info: BookingInfo
-    used: None | Resource
+    used_resource: None | Resource = Field(default=None)
     # Add optional booking time
     # Add priviledged client compared to workflow
     # Add callback address to trigger workflows later
 
 
-class DumpableBooking(TypedDict):
+class DumpableBooking(BaseModel):
     info: BookingInfo
-    used: ResourceInfo | None
+    used_resource: ResourceInfo | None
 
 
-class BookingRequest(TypedDict):
-    name: str
-    resource: RequestedResource
-
-
-async def validate_booking_request(booking_request: Dict) -> BookingRequest:
-    # TODO: Proper error reporting mechanism
-    # TODO: Generic TypedDict validation function
-    return {
-        "name": booking_request["name"],
-        "resource": {
-            "type": booking_request["resource"]["type"],
-            "identifier": booking_request["resource"].get("identifier"),
-        },
-    }
+DumpableResource.model_rebuild()
+ResourceInfo.model_rebuild()
+Resource.model_rebuild()
 
 
 async def dumpable_booking(
     booking: Booking,
-) -> DumpableBooking:
-    return {
-        "info": booking["info"],
-        "used": booking["used"]["info"] if booking["used"] else None,
-    }
+):
+    used_resource = (
+        booking.used_resource.info if booking.used_resource else None
+    )
+    return DumpableBooking(info=booking.info, used_resource=used_resource)
 
 
 async def dumpable_bookings(
-    bookings: List[Booking],
-) -> List[DumpableBooking]:
+    bookings: list[Booking],
+):
     return [await dumpable_booking(booking) for booking in bookings]
+
+
+async def dumpable_ids_to_bookings(ids_to_bookings: dict[int, Booking]):
+    return {
+        id: await dumpable_booking(booking)
+        for id, booking in ids_to_bookings.items()
+    }
+
+
+async def add_new_booking(new_booking: NewBooking, server_state: ServerState):
+    booking_id = server_state.booking_id_counter
+    server_state.booking_id_counter += 1
+
+    booking = Booking(
+        info=BookingInfo(
+            status=BookingStatus.WAITING,
+            id=booking_id,
+            **new_booking.model_dump(),
+            booking_time=datetime.now(timezone.utc),
+        )
+    )
+
+    server_state.bookings.append(booking)
+    server_state.ids_to_bookings.update({booking_id: booking})
+
+    return booking

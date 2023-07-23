@@ -1,184 +1,202 @@
-import asyncio
-from copy import deepcopy
-from http import HTTPStatus
-from typing import List
+from __future__ import annotations
 
-from aiohttp import web
-from aiohttp.web_request import Request
-from aiohttp.web_routedef import RouteDef
+from http import HTTPStatus
+
 from booking_server.booking import (
+    Booking,
     BookingStatus,
+    DumpableBooking,
+    NewBooking,
+    add_new_booking,
     dumpable_booking,
-    validate_booking_request,
+    dumpable_bookings,
 )
 from booking_server.broker import (
     try_assigning_new_resource,
     try_assigning_to_booking,
 )
-from booking_server.resource import validate_resource
-from booking_server.server import add_new_booking, get_server_data
+from booking_server.resource import (
+    DumpableResource,
+    NewResource,
+    add_new_resource,
+    dumpable_resources,
+)
+from booking_server.server import AppRequest, fire_and_forget
+from fastapi import APIRouter
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse, Response
+
+router = APIRouter()
 
 
-async def post_booking(request: Request):
-    server_data = await get_server_data(request.app)
-    booking_request = await validate_booking_request(await request.json())
+@router.post("/resource", status_code=HTTPStatus.CREATED)
+async def post_resource(new_resource: NewResource, request: AppRequest):
+    server_state = request.app.server_state
 
-    booking = await add_new_booking(booking_request, server_data)
+    resource = await add_new_resource(new_resource, server_state)
 
-    asyncio.create_task(
-        try_assigning_new_resource(booking, server_data["resources"])
+    fire_and_forget(
+        request.app, try_assigning_to_booking(resource, server_state.bookings)
     )
 
-    return web.json_response(await dumpable_booking(deepcopy(booking)))
+    return Response(status_code=HTTPStatus.CREATED)
 
 
-async def unimplemented(_: Request):
-    return web.Response(
-        text="This endpoint is not yet implemented.",
-        status=HTTPStatus.NOT_IMPLEMENTED,
+@router.post(
+    "/booking", response_model=Booking, status_code=HTTPStatus.CREATED
+)
+async def post_booking(new_booking: NewBooking, request: AppRequest):
+    server_state = request.app.server_state
+
+    booking = await add_new_booking(new_booking, server_state)
+
+    fire_and_forget(
+        request.app,
+        try_assigning_new_resource(booking, server_state.resources),
     )
+    # TODO: Check response body in Swagger
+    return JSONResponse(jsonable_encoder(booking), HTTPStatus.CREATED)
 
 
-async def post_resource(request: Request):
-    resource = await validate_resource(await request.json())
-
-    server_data = await get_server_data(request.app)
-
-    # TODO: Check for existing resources with same identifier use HTTP 409 Conflict even when they have different types
-    server_data["resources"].append(resource)
-
-    asyncio.create_task(
-        try_assigning_to_booking(resource, server_data["bookings"])
-    )
-
-    return web.Response()
-
-
-async def get_resource_all(request: Request):
-    return web.json_response((await get_server_data(request.app))["resources"])
-
-
-async def get_booking_id(request: Request):
-    booking_id = int(request.match_info["booking_id"])
-    server_data = await get_server_data(request.app)
+@router.get(
+    "/booking/{booking_id}",
+    response_model=DumpableBooking,
+    status_code=HTTPStatus.OK,
+)
+async def get_booking_by_id(booking_id: int, request: AppRequest):
+    booking = request.app.server_state.ids_to_bookings[booking_id]
 
     # TODO: Proper response for non existing booking
-    return web.json_response(server_data["id_to_booking"][booking_id])
+    return JSONResponse(
+        content=jsonable_encoder(await dumpable_booking(booking))
+    )
 
 
-async def get_booking_all(request: Request):
-    return web.json_response((await get_server_data(request.app))["bookings"])
+@router.get(
+    "/resource/all",
+    response_model=list[DumpableResource],
+    status_code=HTTPStatus.OK,
+)
+async def get_all_resources(
+    request: AppRequest,
+):
+    resources = request.app.server_state.resources
+
+    return JSONResponse(
+        content=jsonable_encoder(await dumpable_resources(resources))
+    )
 
 
-async def post_booking_id_finish(request: Request):
-    booking_id = int(request.match_info["booking_id"])
-    server_data = await get_server_data(request.app)
+@router.get(
+    "/booking/all",
+    response_model=list[Booking],
+    status_code=HTTPStatus.OK,
+)
+async def get_all_bookings(
+    request: AppRequest,
+):
+    bookings = request.app.server_state.bookings
+
+    return JSONResponse(
+        content=jsonable_encoder(await dumpable_bookings(bookings))
+    )
+
+
+@router.post("/booking/{booking_id}/finish", status_code=HTTPStatus.OK)
+async def post_finish_booking(booking_id: int, request: AppRequest):
+    server_state = request.app.server_state
 
     try:
-        booking = server_data["id_to_booking"][booking_id]
+        booking = server_state.ids_to_bookings[booking_id]
     except KeyError:
-        return web.Response(
-            text=f"Booking id {booking_id} doesn't exist.",
-            status=HTTPStatus.NOT_FOUND,
+        return Response(
+            content=f"Booking id {booking_id} doesn't exist.",
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
-    if booking["info"]["status"] == BookingStatus.CANCELLED:
-        return web.Response(
-            status=HTTPStatus.UNPROCESSABLE_ENTITY,
-            text=(
-                f"Booking with id {booking['info']['id']} was already"
-                " cancelled."
+    if booking.info.status == BookingStatus.CANCELLED:
+        return Response(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            content=(
+                f"Booking with id {booking.info.id} was already cancelled."
             ),
         )
 
-    if booking["info"]["status"] == BookingStatus.FINISHED:
-        return web.Response(
-            status=HTTPStatus.UNPROCESSABLE_ENTITY,
-            text=(
-                f"Booking with id {booking['info']['id']} was already"
-                " finished."
-            ),
+    if booking.info.status == BookingStatus.FINISHED:
+        return Response(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            content=f"Booking with id {booking.info.id} was already finished.",
         )
 
-    if booking["info"]["status"] == BookingStatus.WAITING:
-        return web.Response(
-            status=HTTPStatus.UNPROCESSABLE_ENTITY,
-            text=(
-                f"Booking with id {booking['info']['id']} was still waiting"
+    if booking.info.status == BookingStatus.WAITING:
+        return Response(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            content=(
+                f"Booking with id {booking.info.id} was still waiting"
                 " for resource to be assigned to it. Did you mean to"
                 " /booking/{booking_id}/cancel the booking?"
             ),
         )
 
-    freed_resource = booking["used"]
+    freed_resource = booking.used_resource
     if freed_resource is None:
-        raise RuntimeError("Booking didn't have resource even when it should.")
+        raise RuntimeError(
+            "Booking didn't have resource even when it should have."
+        )
 
-    freed_resource["used_by"] = None
-    booking["info"]["status"] = BookingStatus.FINISHED
+    freed_resource.used_by = None
+    booking.info.status = BookingStatus.FINISHED
 
-    bookings = server_data["bookings"]
-    asyncio.create_task(try_assigning_to_booking(freed_resource, bookings))
+    bookings = server_state.bookings
+    fire_and_forget(
+        request.app, try_assigning_to_booking(freed_resource, bookings)
+    )
 
-    return web.Response()
+    return Response(content=f"Booking id {booking_id} finished.")
 
 
-async def post_booking_id_cancel(request: Request):
-    booking_id = int(request.match_info["booking_id"])
-    server_data = await get_server_data(request.app)
+@router.post(
+    "/booking/{booking_id}/cancel",
+    status_code=HTTPStatus.OK,
+)
+async def post_cancel_booking(booking_id: int, request: AppRequest):
+    server_state = request.app.server_state
 
     try:
-        booking = server_data["id_to_booking"][booking_id]
+        booking = server_state.ids_to_bookings[booking_id]
     except KeyError:
-        return web.Response(
-            text=f"Booking id {booking_id} doesn't exist.",
-            status=HTTPStatus.NOT_FOUND,
+        return Response(
+            content=f"Booking id {booking_id} doesn't exist.",
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
-    if booking["info"]["status"] == BookingStatus.CANCELLED:
-        return web.Response(
-            status=HTTPStatus.UNPROCESSABLE_ENTITY,
-            text=(
-                f"Booking with id {booking['info']['id']} was already"
-                " cancelled."
+    if booking.info.status == BookingStatus.CANCELLED:
+        return Response(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            content=(
+                f"Booking with id {booking.info.id} was already cancelled."
             ),
         )
 
-    if booking["info"]["status"] == BookingStatus.FINISHED:
-        return web.Response(
-            status=HTTPStatus.UNPROCESSABLE_ENTITY,
-            text=(
-                f"Booking with id {booking['info']['id']} was already"
-                " finished."
-            ),
+    if booking.info.status == BookingStatus.FINISHED:
+        return Response(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            content=f"Booking with id {booking.info.id} was already finished.",
         )
 
-    if booking["info"]["status"] == BookingStatus.ON:
-        return web.Response(
-            status=HTTPStatus.UNPROCESSABLE_ENTITY,
-            text=(
-                f"Booking with id {booking['info']['id']} had already resource"
+    if booking.info.status == BookingStatus.ON:
+        return Response(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            content=(
+                f"Booking with id {booking.info.id} had already resource"
                 " assigned to it. Did you mean to"
                 " /booking/{booking_id}/finish the booking?"
             ),
         )
 
-    booking["info"]["status"] = BookingStatus.CANCELLED
+    booking.info.status = BookingStatus.CANCELLED
 
-    return web.Response()
+    return Response(content=f"Booking id {booking_id} cancelled.")
 
 
 # TODO: Add /booking/extend
-routes: List[RouteDef] = [
-    web.get("/booking/all", get_booking_all),
-    web.get("/bookings", get_booking_all),
-    web.post("/booking", post_booking),
-    web.post("/booking/{booking_id}/finish", post_booking_id_finish),
-    web.post("/booking/{booking_id}/cancel", post_booking_id_cancel),
-    web.get("/booking/before/{booking_id}", unimplemented),
-    web.get("/booking/{booking_id}", get_booking_id),
-    web.post("/resource", post_resource),
-    web.delete("/resource", unimplemented),
-    web.get("/resource/all", get_resource_all),
-    web.get("/resources", get_resource_all),
-]

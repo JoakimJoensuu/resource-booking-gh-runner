@@ -1,22 +1,37 @@
 import asyncio
+from asyncio import Task
+from typing import cast
 
-from booking_server.api import routes
-from booking_server.server import (
-    ServerData,
-    periodic_cleanup,
-    start_cleaner,
-    start_server,
-)
+import uvloop
+from booking_server.api import router
+from booking_server.custom_asyncio import alist
+from booking_server.server import BookingApp, ServerState, periodic_cleanup
+from hypercorn import Config
+from hypercorn.app_wrappers import ASGIWrapper
+from hypercorn.asyncio.run import worker_serve
+from hypercorn.typing import ASGIFramework
 
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 loop = asyncio.get_event_loop()
 
-initial_server_data: ServerData = {
-    "booking_id_counter": 0,
-    "bookings": [],
-    "resources": [],
-    "id_to_booking": {},
-}
+initial_server_state = ServerState(
+    booking_id_counter=0, bookings=[], resources=[], ids_to_bookings={}
+)
+initial_background_tasks: alist[Task] = alist([])
 
-start_cleaner(loop, periodic_cleanup(initial_server_data))
+cleanup_task = loop.create_task(
+    periodic_cleanup(initial_server_state, initial_background_tasks)
+)
+initial_background_tasks.append(cleanup_task)
 
-start_server(routes, initial_server_data, loop)
+app = BookingApp(
+    server_state=initial_server_state,
+    background_tasks=initial_background_tasks,
+)
+app.include_router(router)
+
+asgi_app = ASGIWrapper(cast(ASGIFramework, app))
+config = Config()
+config.accesslog = "-"
+
+loop.run_until_complete(worker_serve(asgi_app, config))

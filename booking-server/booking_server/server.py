@@ -1,90 +1,72 @@
+from __future__ import annotations
+
 import asyncio
 import json
-from asyncio.events import AbstractEventLoop
-from copy import deepcopy
-from datetime import datetime, timezone
-from typing import Any, Coroutine, Dict, List, NoReturn, TypedDict
+from asyncio import Task
+from typing import Any, Coroutine, TypeVar
 
 from aioconsole import aprint
-from aiohttp import web
-from aiohttp.web import Application
-from aiohttp.web_routedef import RouteDef
 from booking_server.booking import (
     Booking,
-    BookingRequest,
-    BookingStatus,
     DumpableBooking,
-    dumpable_booking,
     dumpable_bookings,
+    dumpable_ids_to_bookings,
 )
+from booking_server.custom_asyncio import alist
 from booking_server.resource import (
     DumpableResource,
     Resource,
     dumpable_resources,
 )
+from fastapi import FastAPI
+from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel
+from starlette.requests import Request
 
 
-class DumpableServerData(TypedDict):
+class ServerState(BaseModel):
     booking_id_counter: int
-    bookings: List[DumpableBooking]
-    resources: List[DumpableResource]
-    id_to_booking: Dict[int, DumpableBooking]
+    bookings: list[Booking]
+    resources: list[Resource]
+    ids_to_bookings: dict[int, Booking]
 
 
-class ServerData(TypedDict):
+class DumpableServerState(BaseModel):
     booking_id_counter: int
-    bookings: List[Booking]
-    resources: List[Resource]
-    id_to_booking: Dict[int, Booking]
+    bookings: list[DumpableBooking]
+    resources: list[DumpableResource]
+    ids_to_bookings: dict[int, DumpableBooking]
 
 
-async def dumpable_server_data(
-    server_data: ServerData,
-) -> DumpableServerData:
-    bookings = server_data["bookings"]
-    resources = server_data["resources"]
-
-    return {
-        "bookings": await dumpable_bookings(bookings),
-        "booking_id_counter": server_data["booking_id_counter"],
-        "id_to_booking": {
-            id: await dumpable_booking(booking)
-            for id, booking in enumerate(bookings)
-        },
-        "resources": await dumpable_resources(resources),
-    }
+DumpableServerState.model_rebuild()
+ServerState.model_rebuild()
 
 
-async def add_new_booking(
-    booking_request: BookingRequest, server_data: ServerData
+def fire_and_forget(
+    app: BookingApp, background_routine: Coroutine[Any, Any, None]
 ):
-    booking_id = server_data["booking_id_counter"]
-    server_data["booking_id_counter"] += 1
-
-    booking: Booking = {
-        "info": {
-            "id": booking_id,
-            "name": booking_request["name"],
-            "requested": booking_request["resource"],
-            "booking_time": datetime.now(timezone.utc).isoformat(
-                timespec="seconds"
-            ),
-            "status": BookingStatus.WAITING,
-        },
-        "used": None,
-    }
-
-    server_data["bookings"].append(booking)
-    server_data["id_to_booking"][booking_id] = booking
-
-    return booking
+    background_task = asyncio.create_task(background_routine)
+    app.background_tasks.append(background_task)
 
 
-async def get_server_data(application: Application) -> ServerData:
-    return application["server_data"]
+async def dumpable_server_state(server_state: ServerState):
+    bookings = await dumpable_bookings(server_state.bookings)
+    resources = await dumpable_resources(server_state.resources)
+    booking_id_counter = server_state.booking_id_counter
+    ids_to_bookings = await dumpable_ids_to_bookings(
+        server_state.ids_to_bookings
+    )
+    return DumpableServerState(
+        bookings=bookings,
+        resources=resources,
+        booking_id_counter=booking_id_counter,
+        ids_to_bookings=ids_to_bookings,
+    )
 
 
-async def periodic_cleanup(server_data: ServerData):
+async def periodic_cleanup(
+    server_state: ServerState, background_tasks: alist[Task]
+):
     # TODO: Implement
     # TODO: Could be also ran from endpoint handlers when lists get too big
     while True:
@@ -95,24 +77,39 @@ async def periodic_cleanup(server_data: ServerData):
         await aprint(
             "I could clean something, but here is current server data:"
         )
+        server_state_snapshot = await dumpable_server_state(
+            server_state.model_copy(deep=True)
+        )
+        await aprint(
+            json.dumps(jsonable_encoder(server_state_snapshot), indent=2)
+        )
+        await aprint(f"Background tasks running {len(background_tasks)}.")
+        background_tasks[:] = [
+            task async for task in background_tasks if not task.done()
+        ]
+        await aprint(f"Background tasks left {len(background_tasks)}.")
 
-        dumpable = await dumpable_server_data(deepcopy(server_data))
-        await aprint(json.dumps(dumpable, indent=2))
+
+APPTYPE = TypeVar("APPTYPE", bound="BookingApp")
 
 
-def start_cleaner(
-    loop: AbstractEventLoop,
-    cleaning_routine: Coroutine[Any, Any, NoReturn],
-):
-    loop.create_task(cleaning_routine)
+class BookingApp(FastAPI):
+    server_state: ServerState
+    background_tasks: list[Task]
+
+    def __init__(
+        self,
+        *,
+        server_state: ServerState,
+        background_tasks: list[Task],
+        **fast_api_kwargs: Any,
+    ) -> None:
+        super().__init__(
+            **fast_api_kwargs,
+        )
+        self.server_state = server_state
+        self.background_tasks = background_tasks
 
 
-def start_server(
-    routes: List[RouteDef],
-    initial_server_data: ServerData,
-    loop: AbstractEventLoop,
-):
-    app = web.Application()
-    app.add_routes(routes)
-    app["server_data"] = initial_server_data
-    web.run_app(app, loop=loop)
+class AppRequest(Request):
+    app: BookingApp

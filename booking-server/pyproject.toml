@@ -3,9 +3,12 @@ name = "booking-server"
 version = "0.1.0"
 requires-python = ">=3.8"
 
+# TODO: Lock versions
 dependencies = [
-    "aioconsole >= 0.6.1",
-    "aiohttp >= 3.8.4, <4",
+    "uvloop",
+    "hypercorn",
+    "aioconsole",
+    "fastapi",
     "booking-common @ git+https://github.com/JoakimJoensuu/resource-booking-gh-runner/#subdirectory=booking-common",
 ]
 
