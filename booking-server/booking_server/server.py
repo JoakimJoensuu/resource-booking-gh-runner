@@ -5,7 +5,7 @@ import json
 from asyncio import Task
 from typing import Any, Coroutine, TypeVar
 
-from aioconsole import aprint
+from aioconsole import aprint  # type: ignore
 from booking_server.booking import (
     Booking,
     DumpableBooking,
