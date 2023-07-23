@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import Task
-from typing import cast
+from typing import Any, cast
 
 import uvloop
 from booking_server.api import router
@@ -17,12 +17,11 @@ loop = asyncio.get_event_loop()
 initial_server_state = ServerState(
     booking_id_counter=0, bookings=[], resources=[], ids_to_bookings={}
 )
-initial_background_tasks: alist[Task] = alist([])
+initial_background_tasks: alist[Task[Any]] = alist([])
 
-cleanup_task = loop.create_task(
+loop.create_task(
     periodic_cleanup(initial_server_state, initial_background_tasks)
 )
-initial_background_tasks.append(cleanup_task)
 
 app = BookingApp(
     server_state=initial_server_state,
@@ -33,5 +32,6 @@ app.include_router(router)
 asgi_app = ASGIWrapper(cast(ASGIFramework, app))
 config = Config()
 config.accesslog = "-"
+
 
 loop.run_until_complete(worker_serve(asgi_app, config))

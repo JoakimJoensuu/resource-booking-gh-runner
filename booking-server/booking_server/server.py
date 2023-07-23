@@ -65,8 +65,12 @@ async def dumpable_server_state(server_state: ServerState):
 
 
 async def periodic_cleanup(
-    server_state: ServerState, background_tasks: alist[Task]
+    server_state: ServerState, background_tasks: alist[Task[Any]]
 ):
+    this_task = asyncio.current_task()
+    assert this_task
+    background_tasks.append(this_task)
+
     # TODO: Implement
     # TODO: Could be also ran from endpoint handlers when lists get too big
     while True:

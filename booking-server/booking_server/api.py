@@ -54,8 +54,10 @@ async def post_booking(new_booking: NewBooking, request: AppRequest):
         request.app,
         try_assigning_new_resource(booking, server_state.resources),
     )
-    # TODO: Check response body in Swagger
-    return JSONResponse(jsonable_encoder(booking), HTTPStatus.CREATED)
+
+    return JSONResponse(
+        jsonable_encoder(await dumpable_booking(booking)), HTTPStatus.CREATED
+    )
 
 
 @router.get(
