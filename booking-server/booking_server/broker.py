@@ -17,7 +17,7 @@ async def try_assigning_new_resource(
     if booking.info.status != BookingStatus.WAITING:
         return
 
-    requested = booking.info.requested
+    requested = booking.info.resource
 
     resource = find_free_resource(requested, resources)
 

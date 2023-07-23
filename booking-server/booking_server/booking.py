@@ -25,13 +25,13 @@ class RequestedResource(BaseModel):
 
 class NewBooking(BaseModel):
     name: str = Field(examples=["Some One"])
-    requested: RequestedResource
+    resource: RequestedResource
 
 
 class BookingInfo(BaseModel):
     name: str
     id: int
-    requested: RequestedResource
+    resource: RequestedResource
     booking_time: datetime
     status: BookingStatus
 
@@ -100,7 +100,7 @@ def find_waiting_booking(resource: Resource, bookings: list[Booking]):
         if booking.info.status != BookingStatus.WAITING:
             continue
 
-        requested_resource = booking.info.requested
+        requested_resource = booking.info.resource
         if requested_resource.type != resource.info.type:
             continue
         if (
