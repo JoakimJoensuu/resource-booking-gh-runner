@@ -1,4 +1,5 @@
-from booking_client.cli import entry
+from booking_client.cli import handle_command
 
-if __name__ == "__main__":
-    entry()
+# TODO: Read config and env
+
+handle_command()

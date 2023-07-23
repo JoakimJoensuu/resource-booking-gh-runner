@@ -1,12 +1,12 @@
 [project]
 name = "booking-client"
 version = "0.1.0"
-requires-python = ">=3.7"
+requires-python = ">=3.11"
 
-dependencies = ["aiohttp >= 3.8.4, <4"]
+dependencies = ["aiohttp", "requests"]
 
 [project.optional-dependencies]
 dev = ["black", "isort", "pylint", "mypy"]
 
 [project.scripts]
-booking = "booking_client.cli:entry"
+booking = "booking_client.cli:handle_command"
