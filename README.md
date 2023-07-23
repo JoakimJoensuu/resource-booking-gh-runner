@@ -3,7 +3,7 @@
 Hobby project to get familiar with Python asyncio.
 
 Targeted key features:
-- server to keep track of resources and bookings and automatically assign free resources
+- server to keep track of resources and bookings and automatically allocate free resources
 - CLI tool to book, add and remove resources from/to the booking system
 - pop-up notifications for starting or ending booking when CLI is in interactive mode
 - stop GitHub Actions workflow and continue when requested resource becomes free
