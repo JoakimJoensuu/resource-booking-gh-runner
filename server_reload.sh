@@ -1,3 +1,3 @@
 #!/bin/sh
 
-find . -type f -name "*.py" ! -path "*/.venv/*" | entr -rs "echo ''; echo ===============================================; echo ''; python booking-server/booking_server"
+find . -type f -path "./*/booking_server/*.py" ! -path "*/.venv/*" | entr -rs "echo ''; echo ===============================================; echo ''; python booking-server/booking_server"
