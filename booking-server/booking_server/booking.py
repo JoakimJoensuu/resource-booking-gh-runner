@@ -93,3 +93,21 @@ async def add_new_booking(new_booking: NewBooking, server_state: ServerState):
     server_state.ids_to_bookings.update({booking_id: booking})
 
     return booking
+
+
+def find_waiting_booking(resource: Resource, bookings: list[Booking]):
+    for booking in bookings:
+        if booking.info.status != BookingStatus.WAITING:
+            continue
+
+        requested_resource = booking.info.requested
+        if requested_resource.type != resource.info.type:
+            continue
+        if (
+            requested_resource.identifier != resource.info.identifier
+            and requested_resource.identifier is not None
+        ):
+            continue
+
+        return booking
+    return None
