@@ -15,7 +15,11 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 loop = asyncio.get_event_loop()
 
 initial_server_state = ServerState(
-    booking_id_counter=0, bookings=[], resources=[], ids_to_bookings={}
+    booking_id_counter=0,
+    bookings=[],
+    resources=[],
+    ids_to_bookings={},
+    ids_to_resources={},
 )
 initial_background_tasks: alist[Task[Any]] = alist([])
 

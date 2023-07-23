@@ -15,6 +15,7 @@ from booking_server.broker import (
     try_assigning_new_resource,
     try_assigning_to_booking,
 )
+from booking_server.exceptions import AlreadyExistingId
 from booking_server.resource import (
     DumpableResource,
     NewResource,
@@ -33,7 +34,12 @@ router = APIRouter()
 async def post_resource(new_resource: NewResource, request: AppRequest):
     server_state = request.app.server_state
 
-    resource = await add_new_resource(new_resource, server_state)
+    try:
+        resource = await add_new_resource(new_resource, server_state)
+    except AlreadyExistingId as exception:
+        return Response(
+            status_code=HTTPStatus.CONFLICT, content=exception.message
+        )
 
     fire_and_forget(
         request.app, try_assigning_to_booking(resource, server_state.bookings)

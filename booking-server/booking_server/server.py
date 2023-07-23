@@ -16,6 +16,7 @@ from booking_server.custom_asyncio import alist
 from booking_server.resource import (
     DumpableResource,
     Resource,
+    dumpable_ids_to_resources,
     dumpable_resources,
 )
 from fastapi import FastAPI
@@ -29,6 +30,7 @@ class ServerState(BaseModel):
     bookings: list[Booking]
     resources: list[Resource]
     ids_to_bookings: dict[int, Booking]
+    ids_to_resources: dict[str, Resource]
 
 
 class DumpableServerState(BaseModel):
@@ -36,6 +38,7 @@ class DumpableServerState(BaseModel):
     bookings: list[DumpableBooking]
     resources: list[DumpableResource]
     ids_to_bookings: dict[int, DumpableBooking]
+    ids_to_resources: dict[str, DumpableResource]
 
 
 DumpableServerState.model_rebuild()
@@ -56,11 +59,15 @@ async def dumpable_server_state(server_state: ServerState):
     ids_to_bookings = await dumpable_ids_to_bookings(
         server_state.ids_to_bookings
     )
+    ids_to_resources = await dumpable_ids_to_resources(
+        server_state.ids_to_resources
+    )
     return DumpableServerState(
         bookings=bookings,
         resources=resources,
         booking_id_counter=booking_id_counter,
         ids_to_bookings=ids_to_bookings,
+        ids_to_resources=ids_to_resources,
     )
 
 
