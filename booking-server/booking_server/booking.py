@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from asyncio import Event
 from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -39,9 +40,13 @@ class BookingInfo(BaseModel):
 class Booking(BaseModel):
     info: BookingInfo
     used_resource: None | Resource = Field(default=None)
+    event: Event = Event()
     # Add optional booking time
     # Add priviledged client compared to workflow
     # Add callback address to trigger workflows later
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class DumpableBooking(BaseModel):

@@ -53,21 +53,16 @@ def fire_and_forget(
 
 
 async def dumpable_server_state(server_state: ServerState):
-    bookings = await dumpable_bookings(server_state.bookings)
-    resources = await dumpable_resources(server_state.resources)
-    booking_id_counter = server_state.booking_id_counter
-    ids_to_bookings = await dumpable_ids_to_bookings(
-        server_state.ids_to_bookings
-    )
-    ids_to_resources = await dumpable_ids_to_resources(
-        server_state.ids_to_resources
-    )
     return DumpableServerState(
-        bookings=bookings,
-        resources=resources,
-        booking_id_counter=booking_id_counter,
-        ids_to_bookings=ids_to_bookings,
-        ids_to_resources=ids_to_resources,
+        bookings=await dumpable_bookings(server_state.bookings),
+        resources=await dumpable_resources(server_state.resources),
+        booking_id_counter=server_state.booking_id_counter,
+        ids_to_bookings=await dumpable_ids_to_bookings(
+            server_state.ids_to_bookings
+        ),
+        ids_to_resources=await dumpable_ids_to_resources(
+            server_state.ids_to_resources
+        ),
     )
 
 
@@ -81,16 +76,14 @@ async def periodic_cleanup(
     # TODO: Implement
     # TODO: Could be also ran from endpoint handlers when lists get too big
     while True:
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
         await aprint(
-            "========================================================"
+            "===============================CLEANUP=============================="
         )
         await aprint(
             "I could clean something, but here is current server data:"
         )
-        server_state_snapshot = await dumpable_server_state(
-            server_state.model_copy(deep=True)
-        )
+        server_state_snapshot = await dumpable_server_state(server_state)
         await aprint(
             json.dumps(jsonable_encoder(server_state_snapshot), indent=2)
         )
