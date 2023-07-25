@@ -19,7 +19,7 @@ from booking_server.resource import (
     dumpable_ids_to_resources,
     dumpable_resources,
 )
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from starlette.requests import Request
@@ -123,4 +123,8 @@ class BookingApp(FastAPI):
 
 
 class AppRequest(Request):
+    app: BookingApp
+
+
+class AppWebSocket(WebSocket):
     app: BookingApp

@@ -26,7 +26,6 @@ def handle_command():
 
     args = vars(main_parser.parse_args())
     subcommand: Callable[..., NoReturn] = args.pop("func")
-    print(type(subcommand))
     subcommand(**args)
 
 

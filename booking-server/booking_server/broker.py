@@ -6,6 +6,8 @@ def assign_to_each_others(resource: Resource, booking: Booking):
     booking.info.status = BookingStatus.ON
     booking.used_resource = resource
     resource.used_by = booking
+    booking.event.set()
+    booking.event.clear()
 
 
 async def try_assigning_new_resource(

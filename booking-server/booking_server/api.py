@@ -22,7 +22,7 @@ from booking_server.resource import (
     add_new_resource,
     dumpable_resources,
 )
-from booking_server.server import AppRequest, fire_and_forget
+from booking_server.server import AppRequest, AppWebSocket, fire_and_forget
 from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, Response
@@ -210,6 +210,23 @@ async def post_cancel_booking(booking_id: int, request: AppRequest):
     booking.info.status = BookingStatus.CANCELLED
 
     return Response(content=f"Booking id {booking_id} cancelled.")
+
+
+@router.websocket("/booking/{booking_id}/wait")
+async def websocket_wait_booking(booking_id: int, websocket: AppWebSocket):
+    server_state = websocket.app.server_state
+    await websocket.accept()
+
+    try:
+        booking = server_state.ids_to_bookings[booking_id]
+    except KeyError:
+        await websocket.send_json({"message": "No such booking id"})
+        return
+
+    if booking.info.status == BookingStatus.WAITING:
+        await booking.event.wait()
+
+    await websocket.send_json({"message": "Resource is yours"})
 
 
 # TODO: Add /booking/extend
