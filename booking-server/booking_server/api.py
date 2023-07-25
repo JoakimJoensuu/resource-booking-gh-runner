@@ -23,7 +23,7 @@ from booking_server.resource import (
     dumpable_resources,
 )
 from booking_server.server import AppRequest, AppWebSocket, fire_and_forget
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, Response
 
@@ -37,9 +37,9 @@ async def post_resource(new_resource: NewResource, request: AppRequest):
     try:
         resource = await add_new_resource(new_resource, server_state)
     except AlreadyExistingId as exception:
-        return Response(
-            status_code=HTTPStatus.CONFLICT, content=exception.message
-        )
+        raise HTTPException(
+            HTTPStatus.CONFLICT, exception.message
+        ) from exception
 
     fire_and_forget(
         request.app, try_assigning_to_booking(resource, server_state.bookings)
