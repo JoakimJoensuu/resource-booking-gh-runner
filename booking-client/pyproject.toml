@@ -9,4 +9,4 @@ dependencies = ["aiohttp", "requests"]
 dev = ["black", "isort", "pylint", "mypy"]
 
 [project.scripts]
-booking = "booking_client.cli:handle_command"
+booking = "booking_client.cli:entrypoint"

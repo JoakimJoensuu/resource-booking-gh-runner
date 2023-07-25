@@ -1,5 +1,6 @@
-from booking_client.cli import handle_command
+from booking_client.cli import entrypoint
 
 # TODO: Read config and env
 
-handle_command()
+
+entrypoint()
