@@ -50,7 +50,10 @@ jobs:
             echo "$booking_response"
             booking_id=$(echo "$booking_response" | jq '."info"."id"')
             echo "booking_id=$booking_id"
-            echo "$booking_id" > booking_id
+
+            tmp_dir="/tmp/actions/${{ github.run_id }}/"
+            mkdir -p "$tmp_dir"
+            echo "$booking_id" > "$tmp_dir/booking_id"
             exit 1;
           fi
 
@@ -58,5 +61,8 @@ jobs:
           echo "Accessing resource here"
 
       - run: |
-          cat booking_id
-          echo "cancel booking here $(cat booking_id)"
+          booking_id=$(cat /tmp/actions/${{ github.run_id }}/booking_id)
+          curl -X 'POST' \
+            'http://localhost:8000/booking/0/finish' \
+            -H 'accept: application/json' \
+            -d ''
