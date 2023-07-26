@@ -63,6 +63,6 @@ jobs:
       - run: |
           booking_id=$(cat /tmp/actions/${{ github.run_id }}/booking_id)
           curl -X 'POST' \
-            'http://localhost:8000/booking/0/finish' \
+            "http://localhost:8000/booking/$booking_id/finish" \
             -H 'accept: application/json' \
             -d ''
