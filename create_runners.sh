@@ -13,7 +13,7 @@ REPO=resource-booking-gh-runner
 OWNER=JoakimJoensuu
 RUNNERS_N=10
 
-while getopts ':o:r:h:' option; do
+while getopts ':o:r:h:n:' option; do
   case "$option" in
   h)
     echo "$usage"
@@ -21,6 +21,7 @@ while getopts ':o:r:h:' option; do
     ;;
   r) REPO=$OPTARG ;;
   o) OWNER=$OPTARG ;;
+  n) RUNNERS_N=$OPTARG ;;
   :)
     printf "missing argument for -%s\n" "$OPTARG" >&2
     echo "$usage" >&2
