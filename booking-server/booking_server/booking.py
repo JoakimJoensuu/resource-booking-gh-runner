@@ -30,7 +30,7 @@ class RequestedResource(BaseModel):
 
 class JobInfo(BaseModel):
     model_config = ConfigDict(extra="forbid")
-
+    run_id: int = Field(examples=[5672835261])
     job_id: int = Field(examples=[15367862127])
     repo_owner: str = Field(examples=["JoakimJoensuu"])
     repo_name: str = Field(examples=["resource-booking-gh-runner"])

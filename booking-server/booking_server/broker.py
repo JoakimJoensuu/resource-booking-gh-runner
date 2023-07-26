@@ -9,11 +9,8 @@ from ghapi.all import GhApi
 
 
 async def re_run_github_job(github: JobInfo, github_token: str):
-    api = GhApi(
-        github.repo_owner,
-        github.repo_name,
-        github_token,
-    )
+    api = GhApi(github.repo_owner, github.repo_name, github_token)
+    print(api.actions.get_workflow_run(run_id=github.run_id))
     api.actions.re_run_job_for_workflow_run(job_id=github.job_id)
 
 

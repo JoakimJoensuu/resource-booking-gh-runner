@@ -40,7 +40,7 @@ jobs:
                   "type": "big_machine"
                 },
                 "github": {
-
+                  "run_id": ${{ github.run_id }},
                   "job_id": ${{ steps.get_job_id.outputs.job_id }},
                   "repo_owner": "${{ github.repository_owner }}",
                   "repo_name": "${{ github.event.repository.name }}"
