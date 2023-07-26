@@ -5,12 +5,19 @@ from booking_server.booking import (
     find_waiting_booking,
 )
 from booking_server.resource import Resource, find_free_resource
+from fastcore.basics import AttrDict
 from ghapi.all import GhApi
 
 
 async def re_run_github_job(github: JobInfo, github_token: str):
+    import json
+
     api = GhApi(github.repo_owner, github.repo_name, github_token)
-    print(api.actions.get_workflow_run(run_id=github.run_id))
+    while True:
+        run_info: AttrDict = api.actions.get_workflow_run(run_id=github.run_id)
+        print(run_info["status"])
+        if run_info["status"] == "completed":
+            break
     api.actions.re_run_job_for_workflow_run(job_id=github.job_id)
 
 

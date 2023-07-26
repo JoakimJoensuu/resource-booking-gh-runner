@@ -80,7 +80,7 @@ async def periodic_cleanup(
     # TODO: Implement
     # TODO: Could be also ran from endpoint handlers when lists get too big
     while True:
-        await asyncio.sleep(2)
+        await asyncio.sleep(10)
         await aprint(
             "===============================CLEANUP=============================="
         )
