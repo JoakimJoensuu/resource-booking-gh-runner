@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 from asyncio import Task
 from typing import Any, cast
@@ -10,6 +11,17 @@ from hypercorn import Config
 from hypercorn.app_wrappers import ASGIWrapper
 from hypercorn.asyncio.run import worker_serve
 from hypercorn.typing import ASGIFramework
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "github_token",
+    type=str,
+    help=(
+        "GitHub token for re-running jobs. Must have R/W permissions for"
+        ' "Actions" in your repository.'
+    ),
+)
+github_token: str = parser.parse_args().github_token
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 loop = asyncio.get_event_loop()
@@ -30,6 +42,7 @@ loop.create_task(
 app = BookingApp(
     server_state=initial_server_state,
     background_tasks=initial_background_tasks,
+    github_token=github_token,
 )
 app.include_router(router)
 

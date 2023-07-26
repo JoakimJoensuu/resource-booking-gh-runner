@@ -21,11 +21,13 @@ from booking_server.resource import (
 )
 from fastapi import FastAPI, WebSocket
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from starlette.requests import Request
 
 
 class ServerState(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     booking_id_counter: int
     bookings: list[Booking]
     resources: list[Resource]
@@ -34,6 +36,8 @@ class ServerState(BaseModel):
 
 
 class DumpableServerState(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     booking_id_counter: int
     bookings: list[DumpableBooking]
     resources: list[DumpableResource]
@@ -100,12 +104,14 @@ APPTYPE = TypeVar("APPTYPE", bound="BookingApp")
 class BookingApp(FastAPI):
     server_state: ServerState
     background_tasks: list[Task]
+    github_token: str
 
     def __init__(
         self,
         *,
         server_state: ServerState,
         background_tasks: list[Task],
+        github_token: str,
         **fast_api_kwargs: Any,
     ) -> None:
         super().__init__(
@@ -113,6 +119,7 @@ class BookingApp(FastAPI):
         )
         self.server_state = server_state
         self.background_tasks = background_tasks
+        self.github_token = github_token
 
 
 class AppRequest(Request):

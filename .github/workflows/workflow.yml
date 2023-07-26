@@ -25,4 +25,38 @@ jobs:
           job_id=$(echo "$job" | jq -r '.id')
           echo "job_id=$job_id" >> "$GITHUB_OUTPUT"
 
-      - run: echo ${{ steps.get_job_id.outputs.job_id }}
+      - id: book_resource
+        run: |
+          if [ ${{ github.run_attempt }} = "1" ]
+          then
+            booking_response=$(
+              curl --fail -X 'POST' \
+                'http://localhost:8000/booking' \
+                -H 'accept: application/json' \
+                -H 'Content-Type: application/json' \
+                -d '{
+                "name": "${{ github.repository }} ${{ github.workflow }} ${{ github.job }}",
+                "resource": {
+                  "type": "big_machine"
+                },
+                "github": {
+
+                  "job_id": ${{ steps.get_job_id.outputs.job_id }},
+                  "repo_owner": "${{ github.repository_owner }}",
+                  "repo_name": "${{ github.event.repository.name }}"
+                }
+              }'
+            )
+            echo "$booking_response"
+            booking_id=$(echo "$booking_response" | jq '."info"."id"')
+            echo "booking_id=$booking_id"
+            echo "$booking_id" > booking_id
+            exit 1;
+          fi
+
+      - run: |
+          echo "Accessing resource here"
+
+      - run: |
+          cat booking_id
+          echo "cancel booking here $(cat booking_id)"

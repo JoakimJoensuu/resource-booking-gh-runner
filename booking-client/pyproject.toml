@@ -1,7 +1,7 @@
 [project]
 name = "booking-client"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = ">=3.11" # TODO: Check with vermin
 
 dependencies = ["aiohttp", "requests"]
 

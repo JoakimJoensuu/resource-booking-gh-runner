@@ -6,7 +6,7 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from booking_server.resource import DumpableResource, Resource, ResourceInfo
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
     from booking_server.server import ServerState
@@ -20,36 +20,55 @@ class BookingStatus(str, Enum):
 
 
 class RequestedResource(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     type: str = Field(examples=["big_machine"])
     identifier: None | str = Field(examples=["floor_3"], default=None)
 
+    model_config = ConfigDict(extra="forbid")
+
+
+class JobInfo(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    job_id: int = Field(examples=[15367862127])
+    repo_owner: str = Field(examples=["JoakimJoensuu"])
+    repo_name: str = Field(examples=["resource-booking-gh-runner"])
+
 
 class NewBooking(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str = Field(examples=["Some One"])
     resource: RequestedResource
+    github: JobInfo | None = None
 
 
 class BookingInfo(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str
     id: int
     resource: RequestedResource
     booking_time: datetime
     status: BookingStatus
+    github: JobInfo | None = None
 
 
 class Booking(BaseModel):
+    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
+
     info: BookingInfo
-    used_resource: None | Resource = Field(default=None)
+    used_resource: None | Resource = None
     event: Event = Event()
     # Add optional booking time
     # Add priviledged client compared to workflow
     # Add callback address to trigger workflows later
 
-    class Config:
-        arbitrary_types_allowed = True
-
 
 class DumpableBooking(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     info: BookingInfo
     used_resource: ResourceInfo | None
 

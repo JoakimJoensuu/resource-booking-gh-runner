@@ -32,7 +32,8 @@ router = APIRouter()
 
 @router.post("/resource", status_code=HTTPStatus.CREATED)
 async def post_resource(new_resource: NewResource, request: AppRequest):
-    server_state = request.app.server_state
+    app = request.app
+    server_state = app.server_state
 
     try:
         resource = await add_new_resource(new_resource, server_state)
@@ -42,23 +43,29 @@ async def post_resource(new_resource: NewResource, request: AppRequest):
         ) from exception
 
     fire_and_forget(
-        request.app, try_assigning_to_booking(resource, server_state.bookings)
+        request.app,
+        try_assigning_to_booking(
+            resource, server_state.bookings, app.github_token
+        ),
     )
 
     return Response(status_code=HTTPStatus.CREATED)
 
 
 @router.post(
-    "/booking", response_model=Booking, status_code=HTTPStatus.CREATED
+    "/booking", response_model=DumpableBooking, status_code=HTTPStatus.CREATED
 )
 async def post_booking(new_booking: NewBooking, request: AppRequest):
-    server_state = request.app.server_state
+    app = request.app
+    server_state = app.server_state
 
     booking = await add_new_booking(new_booking, server_state)
 
     fire_and_forget(
         request.app,
-        try_assigning_new_resource(booking, server_state.resources),
+        try_assigning_new_resource(
+            booking, server_state.resources, app.github_token
+        ),
     )
 
     return JSONResponse(
@@ -117,7 +124,8 @@ async def get_all_bookings(
 
 @router.post("/booking/{booking_id}/finish", status_code=HTTPStatus.OK)
 async def post_finish_booking(booking_id: int, request: AppRequest):
-    server_state = request.app.server_state
+    app = request.app
+    server_state = app.server_state
 
     try:
         booking = server_state.ids_to_bookings[booking_id]
@@ -162,7 +170,8 @@ async def post_finish_booking(booking_id: int, request: AppRequest):
 
     bookings = server_state.bookings
     fire_and_forget(
-        request.app, try_assigning_to_booking(freed_resource, bookings)
+        request.app,
+        try_assigning_to_booking(freed_resource, bookings, app.github_token),
     )
 
     return Response(content=f"Booking id {booking_id} finished.")
@@ -222,6 +231,8 @@ async def websocket_wait_booking(booking_id: int, websocket: AppWebSocket):
     except KeyError:
         await websocket.send_json({"message": "No such booking id"})
         return
+
+    #  TODO: Proper message when booking was already cancelled or finished
 
     if booking.info.status == BookingStatus.WAITING:
         await booking.event.wait()

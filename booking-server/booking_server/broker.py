@@ -1,8 +1,25 @@
-from booking_server.booking import Booking, BookingStatus, find_waiting_booking
+from booking_server.booking import (
+    Booking,
+    BookingStatus,
+    JobInfo,
+    find_waiting_booking,
+)
 from booking_server.resource import Resource, find_free_resource
+from ghapi.all import GhApi
 
 
-def assign_to_each_others(resource: Resource, booking: Booking):
+async def re_run_github_job(github: JobInfo, github_token: str):
+    api = GhApi(
+        github.repo_owner,
+        github.repo_name,
+        github_token,
+    )
+    api.actions.re_run_job_for_workflow_run(job_id=github.job_id)
+
+
+def assign_to_each_others(
+    resource: Resource, booking: Booking, github_token: str
+):
     booking.info.status = BookingStatus.ON
     booking.used_resource = resource
     resource.used_by = booking
@@ -11,7 +28,7 @@ def assign_to_each_others(resource: Resource, booking: Booking):
 
 
 async def try_assigning_new_resource(
-    booking: Booking, resources: list[Resource]
+    booking: Booking, resources: list[Resource], github_token: str
 ):
     # TODO: What if booking was deleted from server data before this is
     # ran and this still holds the reference to the object
@@ -26,13 +43,14 @@ async def try_assigning_new_resource(
     if resource is None:
         return
 
-    assign_to_each_others(resource, booking)
+    assign_to_each_others(resource, booking, github_token)
 
-    # TODO: Send notification to client
+    if booking.info.github is not None:
+        await re_run_github_job(booking.info.github, github_token)
 
 
 async def try_assigning_to_booking(
-    resource: Resource, bookings: list[Booking]
+    resource: Resource, bookings: list[Booking], github_token: str
 ):
     # TODO: What if resource is deleted before this runs and this still
     # holds the reference to the object
@@ -45,6 +63,7 @@ async def try_assigning_to_booking(
     if booking is None:
         return
 
-    assign_to_each_others(resource, booking)
+    assign_to_each_others(resource, booking, github_token)
 
-    # TODO: Send notification to client
+    if booking.info.github is not None:
+        await re_run_github_job(booking.info.github, github_token)

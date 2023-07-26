@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from booking_server.exceptions import AlreadyExistingId
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
     from booking_server.booking import Booking, BookingInfo, RequestedResource
@@ -11,22 +11,30 @@ if TYPE_CHECKING:
 
 
 class ResourceInfo(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     type: str
     identifier: str
     # TODO: Allow adding arbitrary commands to be ran when resource is reserved or freed
 
 
 class Resource(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     info: ResourceInfo
     used_by: None | Booking = None
 
 
 class NewResource(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     type: str = Field(examples=["big_machine"])
     identifier: str = Field(examples=["floor_3"])
 
 
 class DumpableResource(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     info: ResourceInfo
     used_by: BookingInfo | None
 
