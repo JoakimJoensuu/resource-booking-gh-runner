@@ -58,11 +58,20 @@ jobs:
           fi
 
       - run: |
+          booking_id=$(cat /tmp/actions/${{ github.run_id }}/booking_id)
+          booking_response=$(
+            curl --fail -X 'GET' \
+              "http://localhost:8000/booking/$booking_id" \
+              -H 'accept: application/json'
+          )
+
+          echo $booking_response
+
           echo "Accessing resource here"
 
       - run: |
           booking_id=$(cat /tmp/actions/${{ github.run_id }}/booking_id)
-          curl -X 'POST' \
+          curl --fail -X 'POST' \
             "http://localhost:8000/booking/$booking_id/finish" \
             -H 'accept: application/json' \
             -d ''
