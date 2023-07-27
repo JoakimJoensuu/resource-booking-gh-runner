@@ -48,13 +48,13 @@ jobs:
               }'
             )
             echo "$booking_response"
-            booking_id=$(echo "$booking_response" | jq '."info"."id"')
+            booking_id=$(echo "$booking_response" | jq -r '."info"."id"')
             echo "booking_id=$booking_id"
 
             tmp_dir="/tmp/actions/${{ github.run_id }}/"
             mkdir -p "$tmp_dir"
             echo "$booking_id" > "$tmp_dir/booking_id"
-            exit 1;
+            exit 1
           fi
 
       - run: |
@@ -66,6 +66,14 @@ jobs:
           )
 
           echo $booking_response
+
+          booking_status=$(echo "$booking_response" | jq -r '."info"."status"')
+
+          echo "$booking_status"
+          if [ "$booking_status" != "ON" ]; then
+              echo "Booking is not ON."
+              exit 1
+          fi
 
           echo "Accessing resource here"
 
