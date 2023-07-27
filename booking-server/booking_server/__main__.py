@@ -50,5 +50,4 @@ asgi_app = ASGIWrapper(cast(ASGIFramework, app))
 config = Config()
 config.accesslog = "-"
 
-
 loop.run_until_complete(worker_serve(asgi_app, config))
