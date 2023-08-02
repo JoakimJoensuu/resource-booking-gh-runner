@@ -98,9 +98,6 @@ async def periodic_cleanup(
         await aprint(f"Background tasks left {len(background_tasks)}.")
 
 
-APPTYPE = TypeVar("APPTYPE", bound="BookingApp")
-
-
 class BookingApp(FastAPI):
     server_state: ServerState
     background_tasks: list[Task]
