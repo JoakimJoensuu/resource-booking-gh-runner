@@ -5,41 +5,44 @@ from booking_client.commands import (
     add_book_command,
     add_book_command_with_waiting_option,
     add_cancel_command,
+    add_exit_command,
     add_finish_command,
     add_resource_commands,
     add_wait_command,
 )
 
 
-def create_interactive_parser():
-    main_parser = ArgumentParser()
-    main_subparsers = main_parser.add_subparsers(required=True)
+def interactive_cli_arg_parser():
+    parser = ArgumentParser()
+    subparsers = parser.add_subparsers(required=True)
 
-    add_book_command(main_subparsers)
-    add_resource_commands(main_subparsers)
-    add_cancel_command(main_subparsers)
-    add_finish_command(main_subparsers)
+    add_book_command(subparsers)
+    add_resource_commands(subparsers)
+    add_cancel_command(subparsers)
+    add_finish_command(subparsers)
+    add_exit_command(subparsers)
 
-    return main_parser
+    return parser
 
 
-def create_argument_parser(interactive_parser):
-    main_parser = ArgumentParser()  # prog="booking")
-    main_subparsers = main_parser.add_subparsers(required=True)
+def main_arg_parser(interactive_cli_parser):
+    parser = ArgumentParser()
+    subparsers = parser.add_subparsers(required=True)
 
-    add_book_command_with_waiting_option(interactive_parser, main_subparsers)
-    add_resource_commands(main_subparsers)
-    add_cancel_command(main_subparsers)
-    add_wait_command(interactive_parser, main_subparsers)
-    add_finish_command(main_subparsers)
+    add_book_command_with_waiting_option(interactive_cli_parser, subparsers)
+    add_resource_commands(subparsers)
+    add_cancel_command(subparsers)
+    add_wait_command(interactive_cli_parser, subparsers)
+    add_finish_command(subparsers)
 
-    return main_parser
+    return parser
 
 
 def entrypoint():
-    interactive_parser = create_interactive_parser()
-    parser = create_argument_parser(interactive_parser)
-    args = vars(parser.parse_args())
+    interactive_cli_parser = interactive_cli_arg_parser()
+    main_parser = main_arg_parser(interactive_cli_parser)
+
+    args = vars(main_parser.parse_args())
     subcommand: Callable[..., NoReturn] = args.pop("func")
     subcommand(**args)
 

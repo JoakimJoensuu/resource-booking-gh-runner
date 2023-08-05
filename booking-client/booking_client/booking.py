@@ -32,7 +32,7 @@ def book_with_wait(
     resource_identifier: None | str,
     wait: bool,
     workflow_id: int,
-    main_parser: ArgumentParser,
+    parser: ArgumentParser,
 ):
     print(f"Booking resource {resource_type}")
     response = requests.post(
@@ -48,14 +48,18 @@ def book_with_wait(
     )
 
     print(response.json())
+    booking_id = response.json()["info"]["id"]
+
+    if wait:
+        wait_booking_with_interactive_cli(parser, booking_id)
 
 
-def cancel_booking(**kwargs):
-    print(kwargs)
+def cancel_booking(booking_id: int):
+    print(booking_id)
 
 
-def wait_booking(main_parser: ArgumentParser, booking_id: int):
-    async def notifyer(tasks: list[Task]):
+def wait_booking_with_interactive_cli(parser: ArgumentParser, booking_id: int):
+    async def wait_booking(tasks: list[Task], booking_id: int):
         url = f"ws://localhost:8000/booking/{booking_id}/wait"
         async with aiohttp.TCPConnector(limit=1) as connector:
             async with aiohttp.ClientSession(connector=connector) as session:
@@ -66,29 +70,27 @@ def wait_booking(main_parser: ArgumentParser, booking_id: int):
                         if task != asyncio.current_task() and not task.done():
                             task.cancel()
 
-    async def interactive_cli(tasks: list[Task]):
+    async def open_interactive_cli(tasks: list[Task]):
         while True:
             command: str = await ainput("> ")
-            if command == "exit":
+            try:
+                args = vars(parser.parse_args(command.split(" ")))
+                subcommand: Callable[..., NoReturn] = args.pop("func")
+                subcommand(**args)
+            except SystemExit:
                 for task in tasks:
                     if task != asyncio.current_task() and not task.done():
                         task.cancel()
                 return
-            try:
-                args = vars(main_parser.parse_args(command.split(" ")))
-                subcommand: Callable[..., NoReturn] = args.pop("func")
-                subcommand(**args)
-            except SystemExit:
-                pass
 
     async def wait_and_open_cli():
         async with asyncio.TaskGroup() as group:
             tasks: list[Task] = []
-            tasks.append(group.create_task(interactive_cli(tasks)))
-            tasks.append(group.create_task(notifyer(tasks)))
+            tasks.append(group.create_task(open_interactive_cli(tasks)))
+            tasks.append(group.create_task(wait_booking(tasks, booking_id)))
 
     asyncio.run(wait_and_open_cli())
 
 
-def finish_booking(**kwargs):
-    print(kwargs)
+def finish_booking(booking_id: int):
+    print(booking_id)
