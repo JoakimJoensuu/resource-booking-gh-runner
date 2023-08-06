@@ -109,9 +109,10 @@ def main_arg_parser(interactive_cli_parser):
     return parser
 
 
-# TODO: go into interactive mode when `book --wait` command is ran
-# TODO: Use tkinter or similiar library to create notification windows when waiting
-# booking to start or timed booking to finish
 # TODO: When running book with --wait, prevent accidental SIGINT
-# TODO: To receive notifications https://stackoverflow.com/a/51610341/12820664
+# https://stackoverflow.com/a/68732870/12820664
+# TODO: To create notification to user when waiting booking to start or timed booking to finish
+# https://pypi.org/project/notify2/
 # TODO: Argcomplete https://stackoverflow.com/a/15289025/12820664
+# TODO: Enable user to give booking start time and length see NaiveDatetime
+# https://docs.pydantic.dev/latest/usage/types/datetime/
