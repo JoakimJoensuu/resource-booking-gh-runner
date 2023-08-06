@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 from asyncio import Task
-from typing import Any, Coroutine, TypeVar
+from typing import Any, Coroutine
 
 from aioconsole import aprint  # type: ignore
 from booking_server.booking import (

@@ -26,8 +26,13 @@ from booking_server.server import AppRequest, AppWebSocket, fire_and_forget
 from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, Response
+from pydantic import BaseModel
 
 router = APIRouter()
+
+
+class Message(BaseModel):
+    message: str
 
 
 @router.post("/resource", status_code=HTTPStatus.CREATED)
@@ -77,14 +82,15 @@ async def post_booking(new_booking: NewBooking, request: AppRequest):
     "/booking/{booking_id}",
     response_model=DumpableBooking,
     status_code=HTTPStatus.OK,
+    responses={HTTPStatus.NOT_FOUND: {"model": Message}},
 )
 async def get_booking_by_id(booking_id: int, request: AppRequest):
     try:
         booking = request.app.server_state.ids_to_bookings[booking_id]
     except KeyError:
-        return Response(
-            f"Booking id {booking_id} doesn't exists.",
+        return JSONResponse(
             status_code=HTTPStatus.NOT_FOUND,
+            content={"message": f"Booking id {booking_id} doesn't exist."},
         )
 
     return JSONResponse(
@@ -232,10 +238,21 @@ async def websocket_wait_booking(booking_id: int, websocket: AppWebSocket):
         await websocket.send_json({"message": "No such booking id"})
         return
 
-    #  TODO: Proper message when booking was already cancelled or finished
+    if booking.info.status == BookingStatus.FINISHED:
+        return await websocket.send_json(
+            {"message": "Booking was already finished"}
+        )
+
+    if booking.info.status == BookingStatus.CANCELLED:
+        return await websocket.send_json(
+            {"message": "Booking was already cancelled"}
+        )
 
     if booking.info.status == BookingStatus.WAITING:
         await booking.event.wait()
+
+    if booking.info.status == BookingStatus.CANCELLED:
+        return await websocket.send_json({"message": "Booking was cancelled"})
 
     await websocket.send_json({"message": "Resource is yours"})
 

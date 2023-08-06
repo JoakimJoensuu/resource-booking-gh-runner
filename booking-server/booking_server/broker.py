@@ -1,5 +1,4 @@
 import asyncio
-import time
 
 from booking_server.booking import (
     Booking,
@@ -25,9 +24,7 @@ async def re_run_github_job(github: JobInfo, github_token: str):
     api.actions.re_run_job_for_workflow_run(job_id=github.job_id)
 
 
-def assign_to_each_others(
-    resource: Resource, booking: Booking, github_token: str
-):
+def assign_to_each_others(resource: Resource, booking: Booking):
     booking.info.status = BookingStatus.ON
     booking.used_resource = resource
     resource.used_by = booking
@@ -51,7 +48,7 @@ async def try_assigning_new_resource(
     if resource is None:
         return
 
-    assign_to_each_others(resource, booking, github_token)
+    assign_to_each_others(resource, booking)
 
     if booking.info.github is not None:
         await re_run_github_job(booking.info.github, github_token)
@@ -71,7 +68,7 @@ async def try_assigning_to_booking(
     if booking is None:
         return
 
-    assign_to_each_others(resource, booking, github_token)
+    assign_to_each_others(resource, booking)
 
     if booking.info.github is not None:
         await re_run_github_job(booking.info.github, github_token)
