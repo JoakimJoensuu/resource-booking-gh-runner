@@ -14,4 +14,4 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["black", "isort", "pylint", "mypy"]
+dev = ["black", "isort", "pylint", "mypy", "types-requests"]

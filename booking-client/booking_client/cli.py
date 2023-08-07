@@ -116,3 +116,4 @@ def main_arg_parser(interactive_cli_parser):
 # TODO: Argcomplete https://stackoverflow.com/a/15289025/12820664
 # TODO: Enable user to give booking start time and length see NaiveDatetime
 # https://docs.pydantic.dev/latest/usage/types/datetime/
+# https://github.com/pydantic/pydantic/pull/4812/files

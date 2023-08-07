@@ -199,11 +199,9 @@ class FixedArgumentParser(ArgumentParser):
         while start_index <= max_option_string_index:
             # consume any Positionals preceding the next option
             next_option_string_index = min(
-                [
-                    index
-                    for index in option_string_indices
-                    if index >= start_index
-                ]
+                index
+                for index in option_string_indices
+                if index >= start_index
             )
             if start_index != next_option_string_index:
                 positionals_end_index = consume_positionals(start_index)
@@ -213,8 +211,8 @@ class FixedArgumentParser(ArgumentParser):
                 if positionals_end_index > start_index:
                     start_index = positionals_end_index
                     continue
-                else:
-                    start_index = positionals_end_index
+
+                start_index = positionals_end_index
 
             # if we consumed all the positionals we could and we're not
             # at the index of an option string, there were extra arguments

@@ -5,7 +5,7 @@ from typing import Callable, NoReturn
 
 import aiohttp
 import requests
-from aioconsole import ainput, aprint
+from aioconsole import ainput, aprint  # type: ignore
 from booking_client.custom_argparse import FixedArgumentParser
 
 
@@ -88,7 +88,7 @@ def wait_booking_with_interactive_cli(
             except ArgumentError as error:
                 await aprint(error.message)
 
-    async def wait_and_open_cli():
+    async def wait_and_open_cli() -> None:
         async with asyncio.TaskGroup() as group:
             tasks: list[Task] = []
             tasks.append(group.create_task(open_interactive_cli(tasks)))
