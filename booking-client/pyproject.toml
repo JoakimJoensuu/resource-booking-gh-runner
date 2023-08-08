@@ -6,7 +6,7 @@ requires-python = ">=3.11" # TODO: Check with vermin
 dependencies = ["aiohttp", "requests"]
 
 [project.optional-dependencies]
-dev = ["black", "isort", "pylint", "mypy", "types-requests"]
+dev = ["black", "isort", "pylint[spelling]", "mypy", "types-requests"]
 
 [project.scripts]
 booking = "booking_client.__main__:entrypoint"

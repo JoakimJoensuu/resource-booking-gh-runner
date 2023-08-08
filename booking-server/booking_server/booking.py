@@ -62,7 +62,7 @@ class Booking(BaseModel):
     used_resource: None | Resource = None
     event: Event = Event()
     # Add optional booking time
-    # Add priviledged client compared to workflow
+    # Add privileged client compared to workflow
     # Add callback address to trigger workflows later
 
 

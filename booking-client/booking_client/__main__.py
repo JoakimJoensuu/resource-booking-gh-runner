@@ -3,7 +3,7 @@ from typing import Callable, NoReturn, cast
 from booking_client.cli import main_arg_parser
 from booking_client.interactive_cli import interactive_cli_arg_parser
 
-# TODO: Read config and env
+# TODO: Read configuration and environment
 
 
 def entrypoint():

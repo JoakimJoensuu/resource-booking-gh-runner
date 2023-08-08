@@ -6,4 +6,4 @@ requires-python = ">=3.8" # TODO: Check with vermin
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["black", "isort", "pylint", "mypy"]
+dev = ["black", "isort", "pylint[spelling]", "mypy"]

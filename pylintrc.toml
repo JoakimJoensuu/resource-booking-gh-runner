@@ -1,3 +1,6 @@
+[tool.pylint]
+spelling-dict = "en_US"
+
 [tool.pylint."messages control"]
 disable = [
     "missing-function-docstring",
