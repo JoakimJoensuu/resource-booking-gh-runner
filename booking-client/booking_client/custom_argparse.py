@@ -1,3 +1,6 @@
+# pylint: disable=wrong-spelling-in-comment, too-many-statements, too-many-locals, too-many-branches
+# pyright: reportGeneralTypeIssues=false
+import sys
 from argparse import SUPPRESS, ArgumentError, ArgumentParser, _get_action_name
 from gettext import gettext
 
@@ -19,6 +22,12 @@ class FixedArgumentParser(ArgumentParser):
             raise ArgumentError(None, msg % ", ".join(argv))
 
         return args
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, sys.stderr)
+        if self.exit_on_error:
+            sys.exit(status)
 
     def _parse_known_args(self, arg_strings, namespace):
         # replace arg strings that are file references
