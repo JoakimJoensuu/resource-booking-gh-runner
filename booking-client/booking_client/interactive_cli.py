@@ -1,7 +1,13 @@
 import sys
 from argparse import _SubParsersAction
 
-from booking_client.booking import book, cancel_booking, finish_booking
+from booking_client.booking import (
+    GREEN,
+    RESET_COLOR,
+    book,
+    cancel_booking,
+    finish_booking,
+)
 from booking_client.custom_argparse import FixedArgumentParser
 from booking_client.resource import resource_add, resource_delete
 
@@ -97,7 +103,9 @@ def add_book_command(subparsers: _SubParsersAction):
 
 
 def interactive_cli_arg_parser():
-    parser = FixedArgumentParser(exit_on_error=False)
+    parser = FixedArgumentParser(
+        exit_on_error=False, prog=f"{GREEN}>{RESET_COLOR}"
+    )
     subparsers = parser.add_subparsers(required=True)
 
     add_book_command(subparsers)
