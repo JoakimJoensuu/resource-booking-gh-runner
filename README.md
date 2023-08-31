@@ -19,9 +19,9 @@ Targeted key features:
 python3.11 -m venv --clear .venv
 . .venv/bin/activate
 pip install --upgrade "pip>=21.3"
-pip install --editable booking-server[dev] --editable booking-client[dev]
-pip install --editable booking-common[dev]
-./server_reload.sh
+pip install --editable booking-server[dev] --editable booking-client[dev] --config-settings editable_mode=compat
+pip install --editable booking-common[dev] --config-settings editable_mode=compat
+./server_reload.sh GH_TOKEN_WITH_ACCESS_TO_ACTIONS
 ```
 
 ```console
