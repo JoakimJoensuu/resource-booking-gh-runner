@@ -5,6 +5,11 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING
 
+from booking_common.models import (
+    BookingRequestBody,
+    JobInfo,
+    RequestedResource,
+)
 from booking_server.resource import DumpableResource, Resource, ResourceInfo
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,40 +24,11 @@ class BookingStatus(str, Enum):
     ON = "ON"
 
 
-class RequestedResource(BaseModel):
+class BookingInfo(BookingRequestBody):
     model_config = ConfigDict(extra="forbid")
-
-    type: str = Field(examples=["big_machine"])
-    identifier: None | str = Field(examples=["floor_3"], default=None)
-
-    model_config = ConfigDict(extra="forbid")
-
-
-class JobInfo(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    run_id: int = Field(examples=[5672835261])
-    job_id: int = Field(examples=[15367862127])
-    repo_owner: str = Field(examples=["JoakimJoensuu"])
-    repo_name: str = Field(examples=["resource-booking-gh-runner"])
-
-
-class NewBooking(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    name: str = Field(examples=["Some One"])
-    resource: RequestedResource
-    github: JobInfo | None = None
-
-
-class BookingInfo(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    name: str
     id: int
-    resource: RequestedResource
     booking_time: datetime
     status: BookingStatus
-    github: JobInfo | None = None
 
 
 class Booking(BaseModel):
@@ -100,7 +76,9 @@ async def dumpable_ids_to_bookings(ids_to_bookings: dict[int, Booking]):
     }
 
 
-async def add_new_booking(new_booking: NewBooking, server_state: ServerState):
+async def add_new_booking(
+    new_booking: BookingRequestBody, server_state: ServerState
+):
     booking_id = server_state.booking_id_counter
     server_state.booking_id_counter += 1
 

@@ -4,6 +4,7 @@ import asyncio
 from argparse import ArgumentError
 from asyncio import Task
 from dataclasses import dataclass
+from datetime import datetime
 from signal import SIGINT
 from time import time
 from typing import TYPE_CHECKING, Callable, NoReturn
@@ -11,6 +12,7 @@ from typing import TYPE_CHECKING, Callable, NoReturn
 import aiohttp
 import requests
 from aioconsole import ainput, aprint  # type: ignore
+from booking_common.models import BookingRequestBody, RequestedResource
 
 if TYPE_CHECKING:
     from booking_client.custom_argparse import FixedArgumentParser
@@ -20,9 +22,20 @@ GREEN = "\033[92m"
 RESET_COLOR = "\033[0m"
 
 
+class CliExit(BaseException):
+    pass
+
+
+@dataclass
+class BookingSlot:
+    start_time: datetime
+    end_time: datetime
+
+
 def book_with_wait(
     resource_type: str,
     resource_identifier: None | str,
+    booking_time: BookingSlot,
     wait: bool,
     workflow_id: int,
     parser: FixedArgumentParser,
@@ -32,19 +45,21 @@ def book_with_wait(
     if workflow_id:
         pass  # TODO
 
+    body = BookingRequestBody(
+        name="Some Client",
+        start_time=booking_time.start_time,
+        end_time=booking_time.end_time,
+        resource=RequestedResource(
+            identifier=resource_identifier, type=resource_type
+        ),
+    )
+
     response = requests.post(
         "http://localhost:8000/booking",
-        json={
-            "name": "Some client",
-            "resource": {
-                "type": resource_type,
-                "identifier": resource_identifier,
-            },
-        },
+        data=body.model_dump_json(),
         timeout=0.1,
     )
 
-    print(response.json())
     booking_id = response.json()["info"]["id"]
 
     if wait:
@@ -133,7 +148,7 @@ def wait_booking_with_interactive_cli(
                 args = vars(parser.parse_args(command.split()))
                 subcommand: Callable[..., NoReturn] = args.pop("func")
                 subcommand(**args)
-            except SystemExit:
+            except CliExit:
                 cancel_all(tasks)
                 return
             except ArgumentError as error:

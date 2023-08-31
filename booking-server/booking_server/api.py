@@ -4,9 +4,9 @@ from http import HTTPStatus
 
 from booking_server.booking import (
     Booking,
+    BookingRequestBody,
     BookingStatus,
     DumpableBooking,
-    NewBooking,
     add_new_booking,
     dumpable_booking,
     dumpable_bookings,
@@ -60,7 +60,7 @@ async def post_resource(new_resource: NewResource, request: AppRequest):
 @router.post(
     "/booking", response_model=DumpableBooking, status_code=HTTPStatus.CREATED
 )
-async def post_booking(new_booking: NewBooking, request: AppRequest):
+async def post_booking(new_booking: BookingRequestBody, request: AppRequest):
     app = request.app
     server_state = app.server_state
 

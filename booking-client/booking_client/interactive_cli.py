@@ -4,6 +4,7 @@ from argparse import _SubParsersAction
 from booking_client.booking import (
     GREEN,
     RESET_COLOR,
+    CliExit,
     book,
     cancel_booking,
     finish_booking,
@@ -67,7 +68,7 @@ def add_finish_command(subparsers: _SubParsersAction):
 
 def add_exit_command(subparsers: _SubParsersAction):
     def callback_function(code: int):
-        sys.exit(code)
+        raise CliExit()
 
     subcommand: FixedArgumentParser = subparsers.add_parser(
         "exit", exit_on_error=False
