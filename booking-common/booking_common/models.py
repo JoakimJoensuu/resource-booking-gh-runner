@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime
+from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -20,7 +23,7 @@ class RequestedResource(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class BookingRequestBody(BaseModel):
+class BookingRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str = Field(examples=["Some One"])
@@ -28,3 +31,32 @@ class BookingRequestBody(BaseModel):
     start_time: datetime
     end_time: datetime
     github: JobInfo | None = None
+
+
+class BookingStatus(str, Enum):
+    CANCELLED = "CANCELLED"
+    FINISHED = "FINISHED"
+    WAITING = "WAITING"
+    ON = "ON"
+
+
+class BookingInfo(BookingRequest):
+    model_config = ConfigDict(extra="forbid")
+    id: int
+    booking_time: datetime
+    status: BookingStatus
+
+
+class ResourceInfo(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: str
+    identifier: str
+    # TODO: Allow adding arbitrary commands to be ran when resource is reserved or freed
+
+
+class BookingResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    info: BookingInfo
+    used_resource: ResourceInfo | None

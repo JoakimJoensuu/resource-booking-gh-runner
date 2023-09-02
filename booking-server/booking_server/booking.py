@@ -2,33 +2,20 @@ from __future__ import annotations
 
 from asyncio import Event
 from datetime import datetime, timezone
-from enum import Enum
 from typing import TYPE_CHECKING
 
 from booking_common.models import (
-    BookingRequestBody,
-    JobInfo,
-    RequestedResource,
+    BookingInfo,
+    BookingRequest,
+    BookingResponse,
+    BookingStatus,
 )
-from booking_server.resource import DumpableResource, Resource, ResourceInfo
-from pydantic import BaseModel, ConfigDict, Field
+from booking_server.exceptions import BookingError
+from booking_server.resource import Resource
+from pydantic import BaseModel, ConfigDict
 
 if TYPE_CHECKING:
     from booking_server.server import ServerState
-
-
-class BookingStatus(str, Enum):
-    CANCELLED = "CANCELLED"
-    FINISHED = "FINISHED"
-    WAITING = "WAITING"
-    ON = "ON"
-
-
-class BookingInfo(BookingRequestBody):
-    model_config = ConfigDict(extra="forbid")
-    id: int
-    booking_time: datetime
-    status: BookingStatus
 
 
 class Booking(BaseModel):
@@ -42,15 +29,6 @@ class Booking(BaseModel):
     # Add callback address to trigger workflows later
 
 
-class DumpableBooking(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    info: BookingInfo
-    used_resource: ResourceInfo | None
-
-
-DumpableResource.model_rebuild()
-ResourceInfo.model_rebuild()
 Resource.model_rebuild()
 
 
@@ -60,7 +38,7 @@ async def dumpable_booking(
     used_resource = (
         booking.used_resource.info if booking.used_resource else None
     )
-    return DumpableBooking(info=booking.info, used_resource=used_resource)
+    return BookingResponse(info=booking.info, used_resource=used_resource)
 
 
 async def dumpable_bookings(
@@ -77,8 +55,13 @@ async def dumpable_ids_to_bookings(ids_to_bookings: dict[int, Booking]):
 
 
 async def add_new_booking(
-    new_booking: BookingRequestBody, server_state: ServerState
+    new_booking: BookingRequest, server_state: ServerState
 ):
+    if new_booking.end_time < datetime.now(timezone.utc):
+        raise BookingError(
+            "Could not add new booking. End date is in the past."
+        )
+
     booking_id = server_state.booking_id_counter
     server_state.booking_id_counter += 1
 

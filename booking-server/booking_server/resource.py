@@ -2,20 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from booking_common.models import BookingInfo, RequestedResource, ResourceInfo
 from booking_server.exceptions import AlreadyExistingId
 from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
-    from booking_server.booking import Booking, BookingInfo, RequestedResource
+    from booking_server.booking import Booking
     from booking_server.server import ServerState
-
-
-class ResourceInfo(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    type: str
-    identifier: str
-    # TODO: Allow adding arbitrary commands to be ran when resource is reserved or freed
 
 
 class Resource(BaseModel):

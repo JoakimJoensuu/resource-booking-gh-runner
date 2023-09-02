@@ -6,7 +6,6 @@ from argparse import (
     Namespace,
     _SubParsersAction,
 )
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Sequence
 
@@ -65,7 +64,7 @@ class ValidateTime(Action):
                     raise ArgumentError(
                         self, f"hours must be >= 0 and <= 23, got {value}"
                     )
-            elif match := re.search(r"^(?P<date>\d{4}-\d{2}-\d{2})$", value):
+            elif match := re.search(r"^(?P<date>\d{2}.\d{2}.\d{4})$", value):
                 if date:
                     raise ArgumentError(
                         self,
@@ -106,22 +105,32 @@ class ValidateTime(Action):
         try:
             if date and time:
                 start_time = datetime.strptime(
-                    f"{date} {time}", "%Y-%m-%d %H:%M"
-                )
+                    f"{date} {time}", "%d.%m.%Y %H:%M"
+                ).astimezone()
             elif date:
-                start_time = datetime.strptime(f"{date}", "%Y-%m-%d")
+                start_time = datetime.strptime(
+                    f"{date}", "%d.%m.%Y"
+                ).astimezone()
             elif time:
-                current = datetime.now()
-                desired_time = datetime.strptime(f"{time}", "%H:%M")
-                start_time = current.replace(
-                    hour=desired_time.hour, minute=desired_time.minute
+                current = (
+                    datetime.now()
+                    .astimezone()
+                    .replace(second=0, microsecond=0)
                 )
+
+                desired_time = datetime.strptime(f"{time}", "%H:%M").time()
+
+                start_time = current.replace(
+                    hour=desired_time.hour,
+                    minute=desired_time.minute,
+                )
+
                 while start_time < current:
                     start_time += timedelta(days=1)
             else:
-                start_time = datetime.now()
-        except ValueError as e:
-            raise ArgumentError(self, ", ".join(e.args))
+                start_time = datetime.now().astimezone()
+        except ValueError as error:
+            raise ArgumentError(self, ", ".join(error.args)) from ValueError
 
         setattr(
             namespace,
@@ -156,10 +165,11 @@ def add_book_command_with_waiting_option(
     subcommand.add_argument("resource_type")
     subcommand.add_argument(
         "booking_time",
-        nargs="+",
+        nargs="*",
         action=ValidateTime,
+        default=[],
         help=(
-            "desired starting date (YYYY-MM-DD) time (hh:mm) and/or duration"
+            "desired starting date (DD.MM.YYYY) time (hh:mm) and/or duration"
             " in hours (99h) and/or minutes (99m) - date and time in local"
             " timezone"
         ),

@@ -4,9 +4,10 @@ from http import HTTPStatus
 
 from booking_server.booking import (
     Booking,
-    BookingRequestBody,
+    BookingError,
+    BookingRequest,
+    BookingResponse,
     BookingStatus,
-    DumpableBooking,
     add_new_booking,
     dumpable_booking,
     dumpable_bookings,
@@ -58,13 +59,18 @@ async def post_resource(new_resource: NewResource, request: AppRequest):
 
 
 @router.post(
-    "/booking", response_model=DumpableBooking, status_code=HTTPStatus.CREATED
+    "/booking", response_model=BookingResponse, status_code=HTTPStatus.CREATED
 )
-async def post_booking(new_booking: BookingRequestBody, request: AppRequest):
+async def post_booking(new_booking: BookingRequest, request: AppRequest):
     app = request.app
     server_state = app.server_state
 
-    booking = await add_new_booking(new_booking, server_state)
+    try:
+        booking = await add_new_booking(new_booking, server_state)
+    except BookingError as error:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail=error.message
+        ) from error
 
     fire_and_forget(
         request.app,
@@ -80,18 +86,18 @@ async def post_booking(new_booking: BookingRequestBody, request: AppRequest):
 
 @router.get(
     "/booking/{booking_id}",
-    response_model=DumpableBooking,
+    response_model=BookingResponse,
     status_code=HTTPStatus.OK,
     responses={HTTPStatus.NOT_FOUND: {"model": Message}},
 )
 async def get_booking_by_id(booking_id: int, request: AppRequest):
     try:
         booking = request.app.server_state.ids_to_bookings[booking_id]
-    except KeyError:
-        return JSONResponse(
+    except KeyError as error:
+        raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            content={"message": f"Booking id {booking_id} doesn't exist."},
-        )
+            detail={"message": f"Booking id {booking_id} doesn't exist."},
+        ) from error
 
     return JSONResponse(
         content=jsonable_encoder(await dumpable_booking(booking))

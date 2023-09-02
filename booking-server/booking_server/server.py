@@ -8,7 +8,7 @@ from typing import Any, Coroutine
 from aioconsole import aprint  # type: ignore
 from booking_server.booking import (
     Booking,
-    DumpableBooking,
+    BookingResponse,
     dumpable_bookings,
     dumpable_ids_to_bookings,
 )
@@ -39,9 +39,9 @@ class DumpableServerState(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     booking_id_counter: int
-    bookings: list[DumpableBooking]
+    bookings: list[BookingResponse]
     resources: list[DumpableResource]
-    ids_to_bookings: dict[int, DumpableBooking]
+    ids_to_bookings: dict[int, BookingResponse]
     ids_to_resources: dict[str, DumpableResource]
 
 

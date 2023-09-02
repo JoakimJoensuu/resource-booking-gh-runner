@@ -1,11 +1,7 @@
 import asyncio
 
-from booking_server.booking import (
-    Booking,
-    BookingStatus,
-    JobInfo,
-    find_waiting_booking,
-)
+from booking_common.models import JobInfo
+from booking_server.booking import Booking, BookingStatus, find_waiting_booking
 from booking_server.resource import Resource, find_free_resource
 from fastcore.basics import AttrDict
 from ghapi.all import GhApi
