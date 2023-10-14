@@ -16,7 +16,7 @@ Targeted key features:
 ## Python dev setup
 
 ```console
-python3.11 -m venv --clear .venv
+python3.12 -m venv --clear .venv
 . .venv/bin/activate
 pip install --upgrade "pip>=21.3"
 pip install --editable booking-server[dev] --editable booking-client[dev] --config-settings editable_mode=compat
