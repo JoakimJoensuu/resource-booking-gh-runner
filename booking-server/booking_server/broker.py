@@ -15,7 +15,7 @@ async def re_run_github_job(github: JobInfo, github_token: str):
         print(run_info["status"])
         if run_info["status"] == "completed":
             break
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.5)  # TODO: Check if this is too ofter for GH API
 
     api.actions.re_run_job_for_workflow_run(job_id=github.job_id)
 
