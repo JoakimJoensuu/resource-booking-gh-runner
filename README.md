@@ -24,6 +24,15 @@ pip install --editable booking-common[dev] --config-settings editable_mode=compa
 ./server_reload.sh GH_TOKEN_WITH_ACCESS_TO_ACTIONS
 ```
 
+Create access token in [GitHub](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens). Token must have read and write permissions to repository where your Workflows are running.
+
+For convenience use tool like `secret-tool` to store and retrieve the token.
+```
+secret-tool store --label "GH actions resource booking R/W" gh-actions-resource-booking-access token
+./server_reload.sh $(secret-tool lookup gh-actions-resource-booking-access token)
+```
+
+Run booking tool:
 ```console
 . .venv/bin/activate
 booking
