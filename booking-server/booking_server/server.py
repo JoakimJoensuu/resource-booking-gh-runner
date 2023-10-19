@@ -28,11 +28,11 @@ from starlette.requests import Request
 class ServerState(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    booking_id_counter: int
-    bookings: list[Booking]
-    resources: list[Resource]
-    ids_to_bookings: dict[int, Booking]
-    ids_to_resources: dict[str, Resource]
+    booking_id_counter: int = 0
+    bookings: list[Booking] = []
+    resources: list[Resource] = []
+    ids_to_bookings: dict[int, Booking] = {}
+    ids_to_resources: dict[str, Resource] = {}
 
 
 class DumpableServerState(BaseModel):
@@ -73,14 +73,9 @@ async def dumpable_server_state(server_state: ServerState):
 async def periodic_cleanup(
     server_state: ServerState, background_tasks: alist[Task[Any]]
 ):
-    this_task = asyncio.current_task()
-    assert this_task
-    background_tasks.append(this_task)
-
     # TODO: Implement
     # TODO: Could be also ran from endpoint handlers when lists get too big
     while True:
-        await asyncio.sleep(10)
         await aprint(
             "===============================CLEANUP=============================="
         )
@@ -96,19 +91,20 @@ async def periodic_cleanup(
             task async for task in background_tasks if not task.done()
         ]
         await aprint(f"Background tasks left {len(background_tasks)}.")
+        await asyncio.sleep(10)
 
 
 class BookingApp(FastAPI):
     server_state: ServerState
-    background_tasks: list[Task]
+    background_tasks: alist[Task[Any]]
     github_token: str
 
     def __init__(
         self,
         *,
-        server_state: ServerState,
-        background_tasks: list[Task],
         github_token: str,
+        server_state: ServerState = ServerState(),
+        background_tasks: alist[Task] = alist([]),
         **fast_api_kwargs: Any,
     ) -> None:
         super().__init__(

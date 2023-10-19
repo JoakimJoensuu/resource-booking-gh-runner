@@ -1,2 +1,6 @@
 [tool.mypy]
-#warn_incomplete_stub = "False"
+
+
+[[tool.mypy.overrides]]
+module = ["ghapi.all", "fastcore.basics"]
+ignore_missing_imports = true

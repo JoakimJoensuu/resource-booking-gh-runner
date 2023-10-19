@@ -11,13 +11,19 @@ async def re_run_github_job(github: JobInfo, github_token: str):
     api = GhApi(github.repo_owner, github.repo_name, github_token)
 
     while True:
-        run_info: AttrDict = api.actions.get_workflow_run(run_id=github.run_id)
+        run_info: AttrDict = api.actions.get_workflow_run(  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=wrong-spelling-in-comment
+            run_id=github.run_id
+        )
         print(run_info["status"])
         if run_info["status"] == "completed":
             break
-        await asyncio.sleep(0.5)  # TODO: Check if this is too ofter for GH API
+        await asyncio.sleep(
+            0.5
+        )  # TODO: Check if this is too often for GitHub API
 
-    api.actions.re_run_job_for_workflow_run(job_id=github.job_id)
+    api.actions.re_run_job_for_workflow_run(  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=wrong-spelling-in-comment
+        job_id=github.job_id
+    )
 
 
 def assign_to_each_others(resource: Resource, booking: Booking):
