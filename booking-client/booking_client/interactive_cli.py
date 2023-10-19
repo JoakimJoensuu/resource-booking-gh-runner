@@ -1,4 +1,3 @@
-import sys
 from argparse import _SubParsersAction
 
 from booking_client.booking import (
