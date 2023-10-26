@@ -57,6 +57,7 @@ async def dumpable_ids_to_bookings(ids_to_bookings: dict[int, Booking]):
 async def add_new_booking(
     new_booking: BookingRequest, server_state: ServerState
 ):
+    # TODO: Error if there is no resource for the booking
     if new_booking.end_time < datetime.now(timezone.utc):
         raise BookingError(
             "Could not add new booking. End date is in the past."
