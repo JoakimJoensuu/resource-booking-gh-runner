@@ -3,7 +3,7 @@ name = "booking-client"
 version = "0.1.0"
 requires-python = ">=3.12" # TODO: Check with vermin
 
-dependencies = ["aiohttp>=3.9.0b0", "requests"]
+dependencies = ["aiohttp", "requests"]
 
 [project.optional-dependencies]
 dev = ["black", "isort", "pylint[spelling]", "mypy", "types-requests"]
