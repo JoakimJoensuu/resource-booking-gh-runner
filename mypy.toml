@@ -1,5 +1,5 @@
 [tool.mypy]
-
+exclude = ["actions-runner"]
 
 [[tool.mypy.overrides]]
 module = ["ghapi.all", "fastcore.basics"]

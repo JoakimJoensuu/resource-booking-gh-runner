@@ -1,5 +1,6 @@
 [tool.pylint]
 spelling-dict = "en_US"
+ignore = ".venv,actions-runner"
 
 [tool.pylint."messages control"]
 disable = [

@@ -1,0 +1,28 @@
+name: Check code
+
+on: [push]
+
+jobs:
+  check-python-code:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Format check
+        if: always()
+        run: make check-format PYTHON=python${{ matrix.python-version }}
+      - name: Lint check
+        if: always()
+        run: make check-lint PYTHON=python${{ matrix.python-version }}
+      - name: Imports check
+        if: always()
+        run: make check-imports PYTHON=python${{ matrix.python-version }}
+      - name: Typing check
+        if: always()
+        run: make check-types PYTHON=python${{ matrix.python-version }}

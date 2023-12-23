@@ -25,7 +25,7 @@ class ValidateTime(Action):
         self,
         parser: ArgumentParser,
         namespace: Namespace,
-        values: Sequence[str],
+        values: str | Sequence[str] | None,
         option_string: str | None = None,
     ) -> None:
         del option_string
@@ -35,15 +35,13 @@ class ValidateTime(Action):
         date: str | None = None
         time: str | None = None
         invalid_arguments: list[str] = []
-        for value in values:
+        for value in values or []:
             if match := re.search(r"^(?P<minutes>\d+)m$", value):
                 if minutes:
                     raise ArgumentError(
                         self,
-                        (
-                            f"too many minute values ({minutes} and"
-                            f" {match.group('minutes')})"
-                        ),
+                        f"too many minute values ({minutes} and"
+                        f" {match.group('minutes')})",
                     )
                 minutes = int(match.group("minutes"))
                 if not 0 <= minutes <= 60:
@@ -54,10 +52,8 @@ class ValidateTime(Action):
                 if hours:
                     raise ArgumentError(
                         self,
-                        (
-                            f"too many hour values ({hours} and"
-                            f" {match.group('hours')})"
-                        ),
+                        f"too many hour values ({hours} and"
+                        f" {match.group('hours')})",
                     )
                 hours = int(match.group("hours"))
                 if not 0 <= hours <= 23:
@@ -68,20 +64,16 @@ class ValidateTime(Action):
                 if date:
                     raise ArgumentError(
                         self,
-                        (
-                            f"too many date values ({date} and"
-                            f" {match.group('date')})"
-                        ),
+                        f"too many date values ({date} and"
+                        f" {match.group('date')})",
                     )
                 date = match.group("date")
             elif match := re.search(r"^(?P<time>\d{1,2}:\d{2})$", value):
                 if time:
                     raise ArgumentError(
                         self,
-                        (
-                            f"too many time values ({time} and"
-                            f" {match.group('time')})"
-                        ),
+                        f"too many time values ({time} and"
+                        f" {match.group('time')})",
                     )
                 time = match.group("time")
             else:

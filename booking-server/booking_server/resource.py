@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from booking_common.models import BookingInfo, RequestedResource, ResourceInfo
+from booking_server.custom_asyncio import alist
 from booking_server.exceptions import AlreadyExistingId
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -12,10 +13,11 @@ if TYPE_CHECKING:
 
 
 class Resource(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
     info: ResourceInfo
     used_by: None | Booking = None
+    bookings: alist[Booking] = alist()
 
 
 class NewResource(BaseModel):
