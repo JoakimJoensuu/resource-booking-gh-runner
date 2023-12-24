@@ -3,7 +3,7 @@ name = "booking-common"
 version = "0.1.0"
 requires-python = ">=3.12" # TODO: Check with vermin
 
-dependencies = []
+dependencies = ["pydantic"]
 
 [project.optional-dependencies]
 dev = ["black", "isort", "pylint[spelling]", "mypy"]
